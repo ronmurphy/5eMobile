@@ -117,18 +117,22 @@
         </div>
     </div>
 
-    <div class="theme-controls hidden">
-        <select id="themeColor">
-            <option value="#007bff">Blue</option>
-            <option value="#28a745">Green</option>
-            <option value="#dc3545">Red</option>
-            <option value="#ffc107">Yellow</option>
-            <option value="#6f42c1">Purple</option>
-        </select>
-        <label for="themeMode">
-            Dark Mode
-            <input type="checkbox" id="themeMode">
-        </label>
+    <div id="themeControls" class="theme-controls">
+        <div class="theme-color-container">
+            <select id="themeColor">
+                <option value="#007bff">Blue</option>
+                <option value="#28a745">Green</option>
+                <option value="#dc3545">Red</option>
+                <option value="#ffc107">Yellow</option>
+                <option value="#6f42c1">Purple</option>
+            </select>
+        </div>
+        <div class="theme-mode-container">
+            <label for="themeMode">
+                Dark Mode
+                <input type="checkbox" id="themeMode">
+            </label>
+        </div>
     </div>
 
     <script src="script.js"></script>

@@ -22,10 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const abilityColumns = document.querySelectorAll('.ability-column');
     const skillList = document.getElementById('skillList');
     const characterForm = document.getElementById('characterForm');
-    const themeControls = document.querySelector('.theme-controls');
+    const themeControls = document.getElementById('themeControls');
     const nameInput = document.getElementById('name');
     const classFeaturesList = document.getElementById('classFeaturesList');
     const raceTraitsList = document.getElementById('raceTraitsList');
+    const themeColorSelect = document.getElementById('themeColor');
+    const themeModeToggle = document.getElementById('themeMode');
+
 
     let currentCardIndex = -1;
 
@@ -287,6 +290,95 @@ document.addEventListener('DOMContentLoaded', () => {
         return names[Math.floor(Math.random() * names.length)];
     }
 
+    function adjustContentPadding() {
+        const themeControlsHeight = themeControls.offsetHeight;
+        document.body.style.paddingBottom = `${themeControlsHeight + 20}px`; // 20px extra for spacing
+    }
+
+    function applyTheme(color, isDark) {
+        document.documentElement.style.setProperty('--accent-color', color);
+        document.body.classList.toggle('dark-mode', isDark);
+    
+        // Set HSL values for the accent color
+        const accentHSL = hexToHSL(color);
+        document.body.style.setProperty('--accent-h', accentHSL.h);
+        document.body.style.setProperty('--accent-s', `${accentHSL.s}%`);
+        document.body.style.setProperty('--accent-l', `${accentHSL.l}%`);
+    }
+    
+    function hexToHSL(hex) {
+        // Remove the hash if it exists
+        hex = hex.replace(/^#/, '');
+    
+        // Convert hex to RGB
+        let r = parseInt(hex.substr(0, 2), 16) / 255;
+        let g = parseInt(hex.substr(2, 2), 16) / 255;
+        let b = parseInt(hex.substr(4, 2), 16) / 255;
+    
+        // Find greatest and smallest channel values
+        let cmin = Math.min(r, g, b),
+            cmax = Math.max(r, g, b),
+            delta = cmax - cmin,
+            h = 0,
+            s = 0,
+            l = 0;
+    
+        // Calculate hue
+        if (delta == 0) h = 0;
+        else if (cmax == r) h = ((g - b) / delta) % 6;
+        else if (cmax == g) h = (b - r) / delta + 2;
+        else h = (r - g) / delta + 4;
+    
+        h = Math.round(h * 60);
+        if (h < 0) h += 360;
+    
+        // Calculate lightness
+        l = (cmax + cmin) / 2;
+    
+        // Calculate saturation
+        s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+    
+        // Convert to percentages
+        s = +(s * 100).toFixed(1);
+        l = +(l * 100).toFixed(1);
+    
+        return { h, s, l };
+    }
+    
+    // ... rest of your JavaScript ...
+
+    function saveThemePreference(color, isDark) {
+        localStorage.setItem('themeColor', color);
+        localStorage.setItem('isDarkMode', isDark);
+    }
+
+    function loadThemePreference() {
+        const savedColor = localStorage.getItem('themeColor');
+        const savedIsDark = localStorage.getItem('isDarkMode') === 'true';
+        
+        if (savedColor) {
+            themeColorSelect.value = savedColor;
+        }
+        themeModeToggle.checked = savedIsDark;
+        
+        applyTheme(savedColor || themeColorSelect.value, savedIsDark);
+    }
+
+    // Theme event listeners
+    themeColorSelect.addEventListener('change', (e) => {
+        const newColor = e.target.value;
+        const isDark = themeModeToggle.checked;
+        applyTheme(newColor, isDark);
+        saveThemePreference(newColor, isDark);
+    });
+
+    themeModeToggle.addEventListener('change', (e) => {
+        const isDark = e.target.checked;
+        const currentColor = themeColorSelect.value;
+        applyTheme(currentColor, isDark);
+        saveThemePreference(currentColor, isDark);
+    });
+
     // Event Listeners
     document.body.addEventListener('click', (e) => {
         if (e.target.classList.contains('rollAbility') && !e.target.disabled) {
@@ -355,11 +447,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    window.addEventListener('resize', adjustContentPadding);
+
+
     // Initialization
     function init() {
+        loadThemePreference();
         createAbilityScoreElements();
         showCard(-1); // Start by showing the start menu
         updateSkillModifiers();
+        adjustContentPadding();
     }
 
     // Fetch data and initialize
