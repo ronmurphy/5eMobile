@@ -28,7 +28,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const raceTraitsList = document.getElementById('raceTraitsList');
     const themeColorSelect = document.getElementById('themeColor');
     const themeModeToggle = document.getElementById('themeMode');
+    // sheet const and variables
+    const characterSheet = document.getElementById('characterSheet');
+    const sheetCharacterName = document.getElementById('sheetCharacterName');
+    const sheetRaceClass = document.getElementById('sheetRaceClass');
+    const sheetHP = document.getElementById('sheetHP');
+    const sheetAC = document.getElementById('sheetAC');
+    const sheetInitiative = document.getElementById('sheetInitiative');
+    const sheetAttributes = document.getElementById('sheetAttributes');
+    const sheetSkills = document.getElementById('sheetSkills');
+    const prevSectionButton = document.getElementById('prevSection');
+    const nextSectionButton = document.getElementById('nextSection');
+    const currentSectionSpan = document.getElementById('currentSection');
 
+    const sections = ['attributesSection', 'skillsSection'];
+    let currentSectionIndex = 0;
+
+    const sheetSavingThrows = document.getElementById('sheetSavingThrows');
+    
+    const skillAbilityMap = {
+        'Acrobatics': 'dexterity',
+        'Animal Handling': 'wisdom',
+        'Arcana': 'intelligence',
+        'Athletics': 'strength',
+        'Deception': 'charisma',
+        'History': 'intelligence',
+        'Insight': 'wisdom',
+        'Intimidation': 'charisma',
+        'Investigation': 'intelligence',
+        'Medicine': 'wisdom',
+        'Nature': 'intelligence',
+        'Perception': 'wisdom',
+        'Performance': 'charisma',
+        'Persuasion': 'charisma',
+        'Religion': 'intelligence',
+        'Sleight of Hand': 'dexterity',
+        'Stealth': 'dexterity',
+        'Survival': 'wisdom'
+    };
 
     let currentCardIndex = -1;
 
@@ -129,7 +166,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getModifierString(score) {
-        const modifier = Math.floor((score - 10) / 2);
+        const modifierTable = {
+            1: -5, 2: -4, 3: -4, 4: -3, 5: -3, 6: -2, 7: -2, 8: -1, 9: -1,
+            10: 0, 11: 0, 12: 1, 13: 1, 14: 2, 15: 2, 16: 3, 17: 3, 18: 4,
+            19: 4, 20: 5, 21: 5, 22: 6, 23: 6, 24: 7, 25: 7, 26: 8, 27: 8,
+            28: 9, 29: 9, 30: 10
+        };
+        const modifier = modifierTable[score] || 0;
         return modifier >= 0 ? `+${modifier}` : `${modifier}`;
     }
 
@@ -364,6 +407,161 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(savedColor || themeColorSelect.value, savedIsDark);
     }
 
+
+// sheet code here
+function showCharacterSheet() {
+    const header = document.querySelector('.header');
+    const characterCreator = document.getElementById('characterCreator');
+    const characterSheet = document.getElementById('characterSheet');
+
+    if (header) {
+        header.classList.add('hidden');
+    }
+    characterCreator.classList.add('hidden');
+    characterSheet.classList.remove('hidden');
+    updateCharacterSheet();
+    initializeCharacterSheet();
+}
+
+function sortRacesAlphabetically(races) {
+    return Object.keys(races).sort().reduce((sortedRaces, race) => {
+        sortedRaces[race] = races[race];
+        return sortedRaces;
+    }, {});
+}
+
+function showCharacterCreator() {
+    const header = document.querySelector('.header');
+    const characterCreator = document.getElementById('characterCreator');
+    const characterSheet = document.getElementById('characterSheet');
+
+    if (header) {
+        header.classList.remove('hidden');
+    }
+    characterCreator.classList.remove('hidden');
+    characterSheet.classList.add('hidden');
+}
+
+function updateCharacterSheet() {
+    const characterName = document.getElementById('name').value;
+    const characterRace = raceSelect.value;
+    const characterClass = classSelect.value;
+
+    sheetCharacterName.textContent = characterName;
+    sheetRaceClass.textContent = `${characterRace} ${characterClass}`;
+
+
+    // You'll need to implement logic to calculate these values
+    sheetHP.textContent = '10';
+    sheetAC.textContent = '15';
+    sheetInitiative.textContent = '+2';
+}
+
+function updateSheetAttributes() {
+    sheetAttributes.innerHTML = '';
+    abilityScores.forEach(ability => {
+        const abilityButton = document.querySelector(`[data-ability="${ability.toLowerCase()}"]`);
+        const score = parseInt(abilityButton.dataset.value) || 10;
+        const modifier = getModifierString(score);
+
+        const attributeBox = document.createElement('div');
+        attributeBox.classList.add('attribute-box');
+        attributeBox.appendChild(createRollButton(ability, modifier));
+        sheetAttributes.appendChild(attributeBox);
+    });
+}
+
+function updateSheetSavingThrows() {
+    sheetSavingThrows.innerHTML = '';
+    abilityScores.forEach(ability => {
+        const abilityButton = document.querySelector(`[data-ability="${ability.toLowerCase()}"]`);
+        const score = parseInt(abilityButton.dataset.value) || 10;
+        const modifier = getModifierString(score);
+
+        const savingThrowBox = document.createElement('div');
+        savingThrowBox.classList.add('saving-throw-box');
+        savingThrowBox.appendChild(createRollButton(`${ability} Save`, modifier));
+        sheetSavingThrows.appendChild(savingThrowBox);
+    });
+}
+
+function updateSheetSkills() {
+    sheetSkills.innerHTML = '';
+    Object.entries(skillAbilityMap).forEach(([skill, ability]) => {
+        const abilityButton = document.querySelector(`[data-ability="${ability}"]`);
+        const abilityScore = parseInt(abilityButton?.dataset.value) || 10;
+        const modifier = getModifierString(abilityScore);
+
+        const skillBox = document.createElement('div');
+        skillBox.classList.add('skill-box');
+        skillBox.appendChild(createRollButton(skill, modifier));
+        sheetSkills.appendChild(skillBox);
+    });
+}
+
+function navigateSection(direction) {
+    currentSectionIndex += direction;
+    if (currentSectionIndex < 0) currentSectionIndex = sections.length - 1;
+    if (currentSectionIndex >= sections.length) currentSectionIndex = 0;
+
+    sections.forEach((section, index) => {
+        document.getElementById(section).classList.toggle('hidden', index !== currentSectionIndex);
+    });
+
+    updateSectionName();
+}
+
+function updateSectionName() {
+    const sectionName = sections[currentSectionIndex].replace('Section', '');
+    const capitalizedSectionName = sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
+    currentSectionSpan.textContent = capitalizedSectionName;
+}
+
+function initializeCharacterSheet() {
+    currentSectionIndex = 0;
+    updateSectionName();
+    sections.forEach((section, index) => {
+        document.getElementById(section).classList.toggle('hidden', index !== 0);
+    });
+    updateSheetAttributes();
+    updateSheetSavingThrows();
+    updateSheetSkills();
+}
+
+prevSectionButton.addEventListener('click', () => navigateSection(-1));
+    nextSectionButton.addEventListener('click', () => navigateSection(1));
+
+
+    function rollD20() {
+        return Math.floor(Math.random() * 20) + 1;
+    }
+
+    function createRollButton(text, modifier) {
+        const button = document.createElement('button');
+        button.classList.add('roll-button');
+        button.innerHTML = `<strong>${text}</strong><div>${modifier}</div>`;
+        button.addEventListener('click', () => {
+            const roll = rollD20();
+            const total = roll + parseInt(modifier);
+            showNotification(`${text}: ${roll} + ${modifier} = ${total}`);
+        });
+        return button;
+    }
+
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.classList.add('notification');
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.classList.add('fade-out');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 500);
+        }, 2500);
+    }
+
     // Theme event listeners
     themeColorSelect.addEventListener('change', (e) => {
         const newColor = e.target.value;
@@ -447,6 +645,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    saveCharacterButton.addEventListener('click', showCharacterSheet);
+
     window.addEventListener('resize', adjustContentPadding);
 
 
@@ -459,12 +659,11 @@ document.addEventListener('DOMContentLoaded', () => {
         adjustContentPadding();
     }
 
-    // Fetch data and initialize
     Promise.all([
         fetch('races.json').then(response => response.json()),
         fetch('classes.json').then(response => response.json())
     ]).then(([racesData, classesData]) => {
-        races = racesData;
+        races = sortRacesAlphabetically(racesData);
         classes = classesData;
         populateRaceSelect();
         populateClassSelect();

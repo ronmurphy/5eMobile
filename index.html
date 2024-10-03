@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D&D 5e Character Creator</title>
-    <meta name="description" content="Create and manage your D&D 5e characters with ease using this mobile-friendly character creator and sheet manager.">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -17,7 +16,7 @@
             <h2>Welcome to the D&D 5e Character Creator</h2>
             <p>This app will guide you through creating your character step by step. You'll be able to choose your race, class, ability scores, and more.</p>
             <p>Use the form fields to input your character's information. For ability scores, you can roll 3 times for each attribute and select your preferred score.</p>
-            <p>Once you've completed your character, you can save it as a JSON file for future use.</p>
+            <p>Once you've completed your character, you can save it and view your character sheet.</p>
             <div class="navigation-buttons">
                 <button class="next-button">Start</button>
             </div>
@@ -36,40 +35,26 @@
                         <label for="race">Race:</label>
                         <select id="race" name="race" required>
                             <option value="">Select a race</option>
-                            <option value="Dwarf">Dwarf</option>
-                            <option value="Elf">Elf</option>
-                            <option value="Halfling">Halfling</option>
-                            <option value="Human">Human</option>
-                            <option value="Dragonborn">Dragonborn</option>
-                            <option value="Gnome">Gnome</option>
-                            <option value="Half-Elf">Half-Elf</option>
-                            <option value="Half-Orc">Half-Orc</option>
-                            <option value="Tiefling">Tiefling</option>
+                            <!-- Races will be populated dynamically -->
                         </select>
                     </div>
-                    <div class="race-info">
-                        <h3>Race Traits</h3>
-                        <ul id="raceTraitsList" class="race-traits-list"></ul>
-                      </div>
-                      <div class="form-group">
+                    <div class="form-group">
                         <label for="class">Class:</label>
                         <select id="class" name="class" required>
                             <option value="">Select a class</option>
+                            <!-- Classes will be populated dynamically -->
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="subclass">Subclass:</label>
                         <select id="subclass" name="subclass" disabled>
                             <option value="">Select a subclass</option>
+                            <!-- Subclasses will be populated dynamically -->
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="level">Level:</label>
                         <input type="number" id="level" name="level" min="1" max="20" value="1" required>
-                    </div>
-                    <div class="form-group">
-                        <h3>Class Features:</h3>
-                        <ul id="classFeaturesList"></ul>
                     </div>
                     <div class="navigation-buttons">
                         <button class="prev-button hidden">Previous</button>
@@ -107,13 +92,60 @@
                 <div class="card hidden">
                     <h2>Review and Save</h2>
                     <p>Review your character details here.</p>
-                    <!-- Add more review details as needed -->
+                    <div class="race-info">
+                        <h3>Race Traits:</h3>
+                        <ul id="raceTraitsList"></ul>
+                    </div>
+                    <div class="class-info">
+                        <h3>Class Features:</h3>
+                        <ul id="classFeaturesList"></ul>
+                    </div>
                     <div class="navigation-buttons">
                         <button class="prev-button">Previous</button>
                         <button type="button" id="saveCharacterButton">Save Character</button>
                     </div>
                 </div>
             </form>
+        </div>
+
+        <div id="characterSheet" class="hidden">
+            <div class="character-header">
+                <div class="character-info">
+                    <h1 id="sheetCharacterName"></h1>
+                    <p id="sheetRaceClass"></p>
+                </div>
+                <div class="character-stats">
+                    <div class="stat-box">
+                        <label>HP</label>
+                        <span id="sheetHP"></span>
+                    </div>
+                    <div class="stat-box">
+                        <label>AC</label>
+                        <span id="sheetAC"></span>
+                    </div>
+                    <div class="stat-box">
+                        <label>Initiative</label>
+                        <span id="sheetInitiative"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="sheet-navigation">
+                <button id="prevSection" class="nav-button">Previous</button>
+                <span id="currentSection">Attributes</span>
+                <button id="nextSection" class="nav-button">Next</button>
+            </div>
+            <div class="sheet-content">
+                <div id="attributesSection" class="sheet-section">
+                    <h3>Attributes and Saving Throws</h3>
+                    <div id="sheetAttributes" class="attribute-grid"></div>
+                    <div id="sheetSavingThrows" class="saving-throws-grid"></div>
+                </div>
+                <div id="skillsSection" class="sheet-section hidden">
+                    <h3>Skills</h3>
+                    <div id="sheetSkills" class="skills-grid"></div>
+                </div>
+                <!-- Add more sections as needed -->
+            </div>
         </div>
     </div>
 
