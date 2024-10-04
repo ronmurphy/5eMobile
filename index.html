@@ -47,15 +47,15 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="level">Level:</label>
+                        <input type="number" id="level" name="level" min="1" max="20" value="1" required>
+                    </div>
+                    <div class="form-group">
                         <label for="subclass">Subclass:</label>
                         <select id="subclass" name="subclass" disabled>
                             <option value="">Select a subclass</option>
                             <!-- Subclasses will be populated dynamically -->
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="level">Level:</label>
-                        <input type="number" id="level" name="level" min="1" max="20" value="1" required>
                     </div>
                     <div class="navigation-buttons">
                         <button class="prev-button hidden">Previous</button>
@@ -139,22 +139,50 @@
             </div>
             <div class="sheet-content">
                 <div id="attributesSection" class="sheet-section">
-                    <h3>Attributes</h3>  <!--and Saving Throws -->
+                    <h3>Attributes</h3>
                     <div id="sheetAttributes" class="attribute-grid"></div>
-                    <div id="sheetSavingThrows" class="saving-throws-grid"></div>
                 </div>
                 <div id="skillsSection" class="sheet-section hidden">
                     <h3>Skills</h3>
                     <div id="sheetSkills" class="skills-grid"></div>
                 </div>
-                <!-- Add more sections as needed -->
-            </div>
-            <div id="optionsSection" class="sheet-section hidden">
-                <h3>Options</h3>
-                <div class="options-content">
+                <div id="inventorySection" class="sheet-section hidden">
+                    <h3>Inventory</h3>
+                    <div class="inventory-controls">
+                        <select id="weaponSelect">
+                            <option value="">No Weapon</option>
+                        </select>
+                        <select id="armorSelect">
+                            <option value="">No Armor</option>
+                        </select>
+                        <select id="itemSelect">
+                            <option value="">No Item</option>
+                        </select>
+                        <button id="addInventoryItem" class="themed-button">+</button>
+                    </div>
+                    <ul id="inventoryList"></ul>
+                    <div class="currency-management">
+                        <h3>Currency</h3>
+                        <div class="currency-inputs">
+                            <input type="number" id="copperInput" placeholder="CP">
+                            <input type="number" id="silverInput" placeholder="SP">
+                            <input type="number" id="electrumInput" placeholder="EP">
+                            <input type="number" id="goldInput" placeholder="GP">
+                            <input type="number" id="platinumInput" placeholder="PP">
+                        </div>
+                        <button id="updateCurrency" class="themed-button">Update Currency</button>
+                    </div>
+                </div>
+                <div id="optionsSection" class="sheet-section hidden">
+                    <h3>Options</h3>
+                    <div class="options-content">
                     <div class="form-group">
                         <label for="characterNotes">Character Notes:</label>
                         <textarea id="characterNotes" rows="5"></textarea>
+                    </div>
+                    <div id="featuresSection" class="sheet-section hidden">
+                        <h3>Features and Traits</h3>
+                        <ul id="featuresList"></ul>
                     </div>
                     <div class="options-buttons">
                         <button id="saveCharacterJson">Save to JSON</button>

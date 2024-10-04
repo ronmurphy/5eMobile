@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let races = {};
     let classes = [];
+    let weapons = [];
+let armors = [];
+let items = [];
     // let character = {}; // Ensure character object is defined globally
     // let abilityScores = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
     
@@ -84,6 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // character = initializeCharacter();
+
     const startMenu = document.getElementById('startMenu');
     const characterCreator = document.getElementById('characterCreator');
     const cards = Array.from(document.querySelectorAll('#characterCreator .card'));
@@ -126,8 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Add 'Options' to your sections array
-    const sections = ['attributesSection', 'skillsSection', 'optionsSection'];
-
+    const sections = ['attributesSection', 'skillsSection', 'inventorySection', 'optionsSection'];
     let currentSectionIndex = 0;
     let randomCharacterButton;
 
@@ -155,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let currentCardIndex = -1;
-
 
 
     function showCard(index) {
@@ -236,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Apply racial bonus
         const racialBonus = getRacialBonus(ability);
         roll += racialBonus;
-
+    
         const modifier = getModifierString(roll);
         
         abilityButton.textContent = `${ability}${racialBonus > 0 ? '*' : ''}: ${roll} (${modifier})`;
@@ -249,6 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
             optionButton.disabled = true;
             optionButton.style.opacity = '0.5';
         });
+        
+        // Update the character object with the new ability score
+        character.abilityScores[ability.toLowerCase()] = roll;
         
         updateAbilityModifier(ability);
         updateSkillModifiers();
@@ -420,9 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateRandomName() {
         const names = ['Aragorn', 'Legolas', 'Gimli', 'Gandalf', 'Frodo', 'Samwise', 'Bilbo', 'Elrond', 'Galadriel', 'Thorin'];
-        character.name = names[Math.floor(Math.random() * names.length)];
-        // return names[Math.floor(Math.random() * names.length)];
-        return character.name;
+        return names[Math.floor(Math.random() * names.length)];
     }
 
     function adjustContentPadding() {
@@ -480,7 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return { h, s, l };
     }
     
-    // ... rest of your JavaScript ...
 
     function saveThemePreference(color, isDark) {
         localStorage.setItem('themeColor', color);
@@ -548,71 +551,293 @@ function showCharacterCreator() {
     document.body.style.paddingTop = '0';
 }
 
-
-
 function updateCharacterSheet() {
     console.log('Updating character sheet');
+    console.log('Updating character sheet with new inventory:', character.inventory);
+    console.log('Updating character sheet with new currency:', character.currency);
 
+    try {
+        // Basic information
+        const nameElement = document.getElementById('sheetCharacterName');
+        if (nameElement) nameElement.textContent = character.name || 'Unnamed Character';
 
-    const characterName = document.getElementById('name').value;
-    const characterRace = raceSelect.value;
-    const characterClass = classSelect.value;
-    const characterLevel = parseInt(document.getElementById('level').value);
+        const raceClassElement = document.getElementById('sheetRaceClass');
+        if (raceClassElement) {
+            const alignment = character.alignment || 'Chaotic Good'; // Default alignment
+            raceClassElement.textContent = `${character.race || 'Unknown Race'} - Level ${character.level || 1} ${character.class || 'Unknown Class'} (${character.subclass || ''}) - ${alignment}`;
+        }
+        
+        // Ability scores and saving throws
+        if (document.getElementById('sheetAttributes')) {
+            updateSheetAttributes();
+        }
+        
+        // Skills
+        if (document.getElementById('sheetSkills')) {
+            updateSheetSkills();
+        }
+        
+        // Combat stats
+        const hpElement = document.getElementById('sheetHP');
+        if (hpElement) hpElement.textContent = `${character.hp || 0}/${character.maxHp || 0}`;
 
-    sheetCharacterName.textContent = characterName;
-    // sheetRaceClass.textContent = `${characterRace} ${characterClass}`;
+        const acElement = document.getElementById('sheetAC');
+        if (acElement) acElement.textContent = character.ac || 10;
 
+        const initiativeElement = document.getElementById('sheetInitiative');
+        if (initiativeElement) {
+            const initiative = character.initiative || 0;
+            initiativeElement.textContent = initiative >= 0 ? `+${initiative}` : initiative;
+        }
+        
+        // Other characteristics
+        const speedElement = document.getElementById('sheetSpeed');
+        if (speedElement) speedElement.textContent = character.speed || 30;
 
-    const alignment = character.alignment || 'Chaotic Good';
-    const level = character.level || 1;  // Default level to 1 if not set
-    const subclass = character.subclass ? `(${character.subclass})` : '';  // Add subclass only if it's assigned
+        const profBonusElement = document.getElementById('sheetProficiencyBonus');
+        if (profBonusElement) profBonusElement.textContent = `+${character.proficiencyBonus || 2}`;
+        
+        // Equipment and Inventory
+        if (document.getElementById('inventoryList')) {
+            updateEquipmentList();
+        }
+        
+        // Features and Traits
+        updateFeaturesAndTraits();
+        
+        // Spellcasting
+        if (typeof updateSpellcasting === 'function') {
+            updateSpellcasting();
+        } else {
+            console.warn('updateSpellcasting function not defined. Skipping spell updates.');
+        }
+        
+        // Notes
+        const notesElement = document.getElementById('characterNotes');
+        if (notesElement) notesElement.value = character.notes || '';
 
-    // Update the sheetRaceClass text to include race - level - class (subclass) - alignment
-    const sheetRaceClass = document.getElementById('sheetRaceClass');
-    sheetRaceClass.textContent = `${character.race || 'Unknown Race'} - Level ${level} - ${character.class || 'Unknown Class'} ${subclass} - ${alignment}`;
+        // Currency
+        updateCurrencyDisplay();
 
+        console.log('Character sheet updated successfully');
+    } catch (error) {
+        console.error('Error updating character sheet:', error);
+    }
+}
 
-    // Calculate ability modifiers
-    const abilityModifiers = {};
-    abilityScores.forEach(ability => {
-        const abilityButton = document.querySelector(`[data-ability="${ability.toLowerCase()}"]`);
-        const score = parseInt(abilityButton.dataset.value) || 10;
-        abilityModifiers[ability.toLowerCase()] = Math.floor((score - 10) / 2);
+function updateCurrencyDisplay() {
+    const currencies = ['copper', 'silver', 'electrum', 'gold', 'platinum'];
+    currencies.forEach(currency => {
+        const input = document.getElementById(`${currency}Input`);
+        if (input) {
+            input.value = character.currency[currency] || 0;
+        }
+    });
+}
+
+// Placeholder for updateSpellcasting function
+function updateSpellcasting() {
+    console.log('Updating spellcasting information');
+    // TODO: Implement spell updating logic
+}
+
+function updateEquipmentList() {
+    const inventoryList = document.getElementById('inventoryList');
+    if (!inventoryList) {
+        console.warn('Inventory list element not found');
+        return;
+    }
+    inventoryList.innerHTML = '';
+    if (character.inventory && Array.isArray(character.inventory)) {
+        character.inventory.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item.name;
+            if (item.damage) {
+                li.textContent += ` (${item.damage})`;
+            }
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.onclick = () => removeItemFromInventory(item);
+            li.appendChild(removeButton);
+            inventoryList.appendChild(li);
+        });
+    }
+}
+
+function updateFeaturesAndTraits() {
+    const featuresList = document.getElementById('featuresList');
+    if (!featuresList) {
+        console.warn('Features list element not found. Skipping features and traits update.');
+        return;
+    }
+
+    featuresList.innerHTML = '';
+    
+    // Combine features and traits
+    const allFeatures = [
+        ...(character.features || []),
+        ...(character.traits || [])
+    ];
+
+    allFeatures.forEach(feature => {
+        const li = document.createElement('li');
+        li.textContent = feature;
+        featuresList.appendChild(li);
     });
 
-    // Calculate HP
+    // If there are no features or traits, display a message
+    if (allFeatures.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'No features or traits available.';
+        featuresList.appendChild(li);
+    }
+}
+
+function updateSpellcasting() {
+    if (character.spellcasting.class) {
+        document.getElementById('spellcastingClass').textContent = character.spellcasting.class;
+        document.getElementById('spellcastingAbility').textContent = character.spellcasting.ability;
+        document.getElementById('spellSaveDC').textContent = character.spellcasting.spellSaveDC;
+        document.getElementById('spellAttackBonus').textContent = character.spellcasting.spellAttackBonus;
+        
+        // Update spell list for each level
+        for (let i = 0; i <= 9; i++) {
+            const spellList = document.getElementById(`spellList${i}`);
+            if (spellList) {
+                spellList.innerHTML = '';
+                const spells = i === 0 ? character.spells.cantrips : character.spells[`level${i}`];
+                spells.forEach(spell => {
+                    const li = document.createElement('li');
+                    li.textContent = spell;
+                    spellList.appendChild(li);
+                });
+            }
+        }
+    }
+}
+
+function loadInventoryData() {
+    Promise.all([
+        fetch('weapons.json').then(response => response.json()),
+        fetch('armor.json').then(response => response.json()),
+        fetch('items.json').then(response => response.json())
+    ]).then(([weaponsData, armorsData, itemsData]) => {
+        weapons = weaponsData;
+        armors = armorsData;
+        items = itemsData;
+        populateDropdowns();
+    }).catch(error => console.error('Error loading inventory data:', error));
+}
+
+function populateDropdowns() {
+    populateDropdown('weaponSelect', weapons);
+    populateDropdown('armorSelect', armors);
+    populateDropdown('itemSelect', items);
+}
+
+function populateDropdown(selectId, data) {
+    const select = document.getElementById(selectId);
+    data.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.name;
+        option.textContent = item.name;
+        select.appendChild(option);
+    });
+}
+
+function addInventoryItem() {
+    const weaponSelect = document.getElementById('weaponSelect');
+    const armorSelect = document.getElementById('armorSelect');
+    const itemSelect = document.getElementById('itemSelect');
+
+    [weaponSelect, armorSelect, itemSelect].forEach(select => {
+        if (select.value !== "") {
+            const selectedItem = getItemFromSelect(select);
+            if (selectedItem) {
+                addItemToInventory(selectedItem);
+            }
+        }
+    });
+
+    // Reset dropdowns
+    weaponSelect.value = "";
+    armorSelect.value = "";
+    itemSelect.value = "";
+}
+
+function getItemFromSelect(select) {
+    const itemList = select.id === 'weaponSelect' ? weapons :
+                     select.id === 'armorSelect' ? armors : items;
+    return itemList.find(item => item.name === select.value);
+}
+
+function addItemToInventory(item) {
+    const inventoryList = document.getElementById('inventoryList');
+    if (!inventoryList) {
+        console.warn('Inventory list element not found');
+        return;
+    }
+    const li = document.createElement('li');
+    li.innerHTML = `
+        <span>${item.name}</span>
+        ${item.damage ? `<span>(${item.damage} ${item.damageType})</span>` : ''}
+        ${item.ac ? `<span>(AC ${item.ac})</span>` : ''}
+        <button class="remove-item">Remove</button>
+    `;
+    li.querySelector('.remove-item').addEventListener('click', () => removeItemFromInventory(item));
+    inventoryList.appendChild(li);
+
+    addItemToCharacter(item);
+}
+
+function removeItemFromInventory(item) {
+    const inventoryList = document.getElementById('inventoryList');
+    if (!inventoryList) {
+        console.warn('Inventory list element not found');
+        return;
+    }
+    const itemElement = Array.from(inventoryList.children).find(li => li.firstChild.textContent === item.name);
+    if (itemElement) {
+        inventoryList.removeChild(itemElement);
+    }
+    removeItemFromCharacter(item);
+}
+
+function addItemToCharacter(item) {
+    if (!character.inventory) character.inventory = [];
+    character.inventory.push(item);
+    updateCharacterSheet();
+}
+
+function removeItemFromCharacter(item) {
+    if (character.inventory) {
+        const index = character.inventory.findIndex(i => i.name === item.name);
+        if (index !== -1) {
+            character.inventory.splice(index, 1);
+            updateCharacterSheet();
+        }
+    }
+}
+
+function updateCurrency() {
+    const currencies = ['copper', 'silver', 'electrum', 'gold', 'platinum'];
+    currencies.forEach(currency => {
+        const input = document.getElementById(`${currency}Input`);
+        if (input) {
+            character.currency[currency] = parseInt(input.value) || 0;
+        }
+    });
+    updateCharacterSheet();
+}
+
+function getHitDiceByClass(characterClass) {
     const hitDice = {
-        'Barbarian': 12, 'Fighter': 10, 'Paladin': 10, 'Ranger': 10,
+        'Barbarian': 12,
+        'Fighter': 10, 'Paladin': 10, 'Ranger': 10,
         'Bard': 8, 'Cleric': 8, 'Druid': 8, 'Monk': 8, 'Rogue': 8, 'Warlock': 8,
         'Sorcerer': 6, 'Wizard': 6
     };
-    const classHitDice = hitDice[characterClass] || 8;
-    const hp = classHitDice + abilityModifiers.constitution + 
-        ((characterLevel - 1) * (Math.floor(classHitDice / 2) + 1 + abilityModifiers.constitution));
-
-    sheetHP.textContent = hp;
-    sheetAC.textContent = 10 + abilityModifiers.dexterity;
-    sheetInitiative.textContent = abilityModifiers.dexterity >= 0 ? 
-        `+${abilityModifiers.dexterity}` : abilityModifiers.dexterity;
-
-
-    updateSheetAttributes();
-    updateSheetSavingThrows();
-    updateSheetSkills();
-
-
-    updateCharInfo('name');
-    updateCharInfo('race');
-    updateCharInfo('class');
-    updateCharInfo('subclass'); // Adding subclass to the update
-    updateCharInfo('level');    // Adding level to the update
-    updateCharInfo('abilityScores');
-    updateCharInfo('skills');
-    updateCharInfo('hp');
-    updateCharInfo('background');
-    updateCharInfo('alignment');
-    updateCharInfo('equipment');
-    updateCharInfo('notes');
+    return hitDice[characterClass] || 8; // Default to d8 if class not found
 }
 
 function updateAbilityScores() {
@@ -625,45 +850,96 @@ function updateAbilityScores() {
 }
 
 function updateSheetAttributes() {
+    console.log('Updating sheet attributes');
     sheetAttributes.innerHTML = '';
-    abilityScores.forEach(ability => {
-        const abilityButton = document.querySelector(`[data-ability="${ability.toLowerCase()}"]`);
-        const score = parseInt(abilityButton.dataset.value) || 10;
-        const modifier = getModifierString(score);
+    Object.entries(character.abilityScores).forEach(([ability, score]) => {
+        const modifier = Math.floor((score - 10) / 2);
+        const modifierString = modifier >= 0 ? `+${modifier}` : `${modifier}`;
+        
+        const isProficientInSave = character.savingThrows[ability].proficient;
+        const savingThrowBonus = isProficientInSave ? modifier + character.proficiencyBonus : modifier;
+        const savingThrowString = savingThrowBonus >= 0 ? `+${savingThrowBonus}` : `${savingThrowBonus}`;
 
         const attributeBox = document.createElement('div');
         attributeBox.classList.add('attribute-box');
-        attributeBox.appendChild(createRollButton(ability, modifier));
+        attributeBox.innerHTML = `
+            <div class="attribute-name">${ability.charAt(0).toUpperCase() + ability.slice(1)}</div>
+            <div class="attribute-score">${score}</div>
+            <button class="roll-button attribute-check" data-ability="${ability}" data-modifier="${modifier}">
+                Check (${modifierString})
+            </button>
+            <button class="roll-button attribute-save" data-ability="${ability}" data-bonus="${savingThrowBonus}">
+                Save (${savingThrowString})
+                ${isProficientInSave ? '<span class="proficient-marker">●</span>' : ''}
+            </button>
+        `;
         sheetAttributes.appendChild(attributeBox);
     });
-}
 
-function updateSheetSavingThrows() {
-    sheetSavingThrows.innerHTML = '';
-    abilityScores.forEach(ability => {
-        const abilityButton = document.querySelector(`[data-ability="${ability.toLowerCase()}"]`);
-        const score = parseInt(abilityButton.dataset.value) || 10;
-        const modifier = getModifierString(score);
-
-        const savingThrowBox = document.createElement('div');
-        savingThrowBox.classList.add('saving-throw-box');
-        savingThrowBox.appendChild(createRollButton(`${ability} Save`, modifier));
-        sheetSavingThrows.appendChild(savingThrowBox);
+    // Add event listeners to the roll buttons
+    sheetAttributes.querySelectorAll('.roll-button').forEach(button => {
+        button.addEventListener('click', handleAttributeRoll);
     });
 }
+
 
 function updateSheetSkills() {
     sheetSkills.innerHTML = '';
-    Object.entries(skillAbilityMap).forEach(([skill, ability]) => {
-        const abilityButton = document.querySelector(`[data-ability="${ability}"]`);
-        const abilityScore = parseInt(abilityButton?.dataset.value) || 10;
-        const modifier = getModifierString(abilityScore);
+    Object.entries(skillAbilityMap).forEach(([skillName, associatedAbility]) => {
+        if (!character.skills[skillName]) {
+            character.skills[skillName] = { proficient: false, bonus: 0 };
+        }
 
+        const skillInfo = character.skills[skillName];
+        const abilityScore = character.abilityScores[associatedAbility] || 10;
+        const abilityModifier = Math.floor((abilityScore - 10) / 2);
+        const totalBonus = skillInfo.proficient ? abilityModifier + character.proficiencyBonus : abilityModifier;
+        const bonusString = totalBonus >= 0 ? `+${totalBonus}` : `${totalBonus}`;
+        
         const skillBox = document.createElement('div');
         skillBox.classList.add('skill-box');
-        skillBox.appendChild(createRollButton(skill, modifier));
+        skillBox.innerHTML = `
+            <span class="skill-name">${skillName} (${associatedAbility.charAt(0).toUpperCase() + associatedAbility.slice(1)})</span>
+            <button class="skill-bonus roll-button" data-skill="${skillName}" data-bonus="${totalBonus}">${bonusString}</button>
+            ${skillInfo.proficient ? '<span class="proficient-marker">●</span>' : ''}
+        `;
         sheetSkills.appendChild(skillBox);
     });
+
+    // Add event listeners to the roll buttons
+    sheetSkills.querySelectorAll('.roll-button').forEach(button => {
+        button.addEventListener('click', handleSkillRoll);
+    });
+}
+
+
+function handleAttributeRoll(event) {
+    const button = event.currentTarget;
+    const ability = button.dataset.ability;
+    const isCheck = button.classList.contains('attribute-check');
+    const modifier = parseInt(isCheck ? button.dataset.modifier : button.dataset.bonus);
+    
+    const roll = rollD20();
+    const total = roll + modifier;
+    
+    const rollType = isCheck ? 'Check' : 'Saving Throw';
+    showNotification(`${ability} ${rollType}: ${roll} + ${modifier} = ${total}`);
+}
+
+function handleSavingThrowRoll(event) {
+    const ability = event.target.dataset.ability;
+    const bonus = parseInt(event.target.dataset.bonus);
+    const roll = rollD20();
+    const total = roll + bonus;
+    showNotification(`${ability} Saving Throw: ${roll} + ${bonus} = ${total}`);
+}
+
+function handleSkillRoll(event) {
+    const skill = event.target.dataset.skill;
+    const bonus = parseInt(event.target.dataset.bonus);
+    const roll = rollD20();
+    const total = roll + bonus;
+    showNotification(`${skill} Check: ${roll} + ${bonus} = ${total}`);
 }
 
 function checkAbilityScoreImprovement() {
@@ -756,83 +1032,108 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
     function generateRandomCharacter() {
         console.log('Generating random character...');
     
-        // Helper function to get a random item from an array
         const getRandomItem = (array) => array[Math.floor(Math.random() * array.length)];
     
         // Generate random race
         const raceNames = Object.keys(races);
         const randomRace = getRandomItem(raceNames);
         console.log('Selected random race:', randomRace);
-        raceSelect.value = randomRace;
+        if (raceSelect) raceSelect.value = randomRace;
         const raceTraits = races[randomRace].traits;
+        character.race = randomRace;
     
         // Generate random class
         const randomClass = getRandomItem(classes);
         console.log('Selected random class:', randomClass.name);
-        classSelect.value = randomClass.name;
+        if (classSelect) classSelect.value = randomClass.name;
+        character.class = randomClass.name;
     
         // Generate random name
-        const randomName = generateRandomName();
-        console.log('Generated random name:', randomName);
-        document.getElementById('name').value = randomName;
-
+        character.name = generateRandomName();
+        console.log('Generated random name:', character.name);
+        const nameInput = document.getElementById('name');
+        if (nameInput) nameInput.value = character.name;
+    
+        // Set random level (1-20)
+        character.level = Math.floor(Math.random() * 20) + 1;
+        const levelInput = document.getElementById('level');
+        if (levelInput) levelInput.value = character.level;
     
         // Generate random ability scores
         abilityScores.forEach(ability => {
+            const scores = Array(4).fill().map(() => Math.floor(Math.random() * 6) + 1);
+            const total = scores.sort((a, b) => b - a).slice(0, 3).reduce((sum, score) => sum + score, 0);
+            const finalScore = total + (raceTraits.abilityScoreIncrease?.[ability.toLowerCase()] || 0);
+            character.abilityScores[ability.toLowerCase()] = finalScore;
+            
             const abilityButton = document.querySelector(`[data-ability="${ability.toLowerCase()}"]`);
             if (abilityButton) {
-                const scores = Array(4).fill().map(() => Math.floor(Math.random() * 6) + 1);
-                const total = scores.sort((a, b) => b - a).slice(0, 3).reduce((sum, score) => sum + score, 0);
-                const finalScore = total + (raceTraits.abilityScoreIncrease?.[ability.toLowerCase()] || 0);
                 abilityButton.textContent = `${ability}: ${finalScore}`;
                 abilityButton.dataset.value = finalScore;
                 abilityButton.disabled = true;
-                updateAbilityModifier(ability.toLowerCase());
             }
         });
     
-        // Set random level (1-20)
-        const randomLevel = Math.floor(Math.random() * 20) + 1;
-        document.getElementById('level').value = randomLevel;
+        // Update ability modifiers
+        Object.keys(character.abilityScores).forEach(updateAbilityModifier);
     
         // Update subclass options
         updateSubclassSelect();
-        if (subclassSelect.options.length > 1) {
+        if (subclassSelect && subclassSelect.options.length > 1) {
             const randomSubclassIndex = Math.floor(Math.random() * (subclassSelect.options.length - 1)) + 1;
             subclassSelect.selectedIndex = randomSubclassIndex;
+            character.subclass = subclassSelect.options[randomSubclassIndex].value;
         }
+    
+        // Calculate HP, AC, and Initiative
+        const conModifier = Math.floor((character.abilityScores.constitution - 10) / 2);
+        const hitDice = getHitDiceByClass(character.class);
+        character.maxHp = hitDice + conModifier + ((character.level - 1) * (Math.floor(hitDice / 2) + 1 + conModifier));
+        character.hp = character.maxHp;
+    
+        const dexModifier = Math.floor((character.abilityScores.dexterity - 10) / 2);
+        character.ac = 10 + dexModifier;
+        character.initiative = dexModifier;
+    
+        // Set alignment randomly
+        const alignments = ['Lawful Good', 'Neutral Good', 'Chaotic Good', 'Lawful Neutral', 'True Neutral', 'Chaotic Neutral', 'Lawful Evil', 'Neutral Evil', 'Chaotic Evil'];
+        character.alignment = getRandomItem(alignments);
     
         // Update class features and race traits
         updateClassFeatures();
         updateRaceTraits();
     
         // Randomly select proficient skills
-        const availableSkills = Array.from(skillList.children).map(skill => skill.textContent.split(' (')[0]);
-        const numSkills = 2 + (raceTraits.extraSkills || 0); // Assuming 2 skills from class, plus any racial bonuses
+        const availableSkills = Object.keys(skillAbilityMap);
+        const numSkills = 2 + (raceTraits.extraSkills || 0);
         const proficientSkills = [];
         for (let i = 0; i < numSkills; i++) {
             const skill = getRandomItem(availableSkills.filter(s => !proficientSkills.includes(s)));
             proficientSkills.push(skill);
         }
     
-        // Update skill list with proficiencies
-        Array.from(skillList.children).forEach(skillItem => {
-            const skillName = skillItem.textContent.split(' (')[0];
-            if (proficientSkills.includes(skillName)) {
-                skillItem.classList.add('proficient');
-                skillItem.textContent += ' (Proficient)';
-            }
+        // Update skill proficiencies
+        availableSkills.forEach(skill => {
+            character.skills[skill.toLowerCase().replace(/\s+/g, '')] = { 
+                proficient: proficientSkills.includes(skill), 
+                expertise: false 
+            };
         });
     
-        console.log('Random character generation complete');
-        updateCharInfo('name');
-        updateCharInfo('race');
-        updateCharInfo('class');
-        updateCharInfo('subclass');
-        updateCharInfo('abilityScores');
-        showCharacterSheet();
-    }
+        // Set proficiency bonus based on level
+        character.proficiencyBonus = Math.ceil(1 + (character.level / 4));
     
+        // Set speed (default to 30, but should be adjusted based on race)
+        character.speed = raceTraits.speed || 30;
+    
+        console.log('Random character generation complete');
+        console.log('Generated character:', character);
+    
+        updateCharacterSheet();
+        showCharacterSheet();
+
+    }
+
     // Modify the initializeRandomCharacterButton function
     function initializeRandomCharacterButton() {
         const randomCharacterButton = document.getElementById('randomCharacter');
@@ -901,15 +1202,70 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         }
     }
 
+    function saveCharacterToJson() {
+        const characterJson = JSON.stringify(character, null, 2);
+        const blob = new Blob([characterJson], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${character.name || 'character'}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    
+    // Load character from JSON file
+    function loadCharacterFromJson() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const loadedCharacter = JSON.parse(e.target.result);
+                    Object.assign(character, loadedCharacter);
+                    updateCharacterSheet();
+                    showCharacterSheet();
+                    console.log('Character loaded successfully');
+                } catch (error) {
+                    console.error('Error loading character:', error);
+                    alert('Error loading character. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+    
+    // Event listeners for save and load buttons
+    document.getElementById('saveCharacterJson').addEventListener('click', saveCharacterToJson);
+    document.getElementById('loadCharacterJson').addEventListener('click', loadCharacterFromJson);
+    
+
     function updateCharInfo(field) {
+        console.log(`Updating character info for field: ${field}`);
+        
+        const getElement = (id) => {
+            const element = document.getElementById(id);
+            if (!element) {
+                console.warn(`Element with id '${id}' not found.`);
+            }
+            return element;
+        };
+    
         switch (field) {
             case 'name':
-                character.name = document.getElementById('name').value;
+                const nameInput = getElement('name');
+                if (nameInput) {
+                    character.name = nameInput.value;
+                }
                 break;
     
             case 'race':
                 character.race = raceSelect.value;
-    
                 // Append racial abilities/traits to notes if they aren't dedicated fields
                 const raceTraits = races[character.race]?.traits || {};
                 character.notes += `Racial Traits for ${character.race}: ${JSON.stringify(raceTraits)}\n`;
@@ -917,7 +1273,6 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
     
             case 'class':
                 character.class = classSelect.value;
-    
                 // Optionally add class features to notes if not handled elsewhere
                 const classFeatures = classes[character.class]?.features || {};
                 character.notes += `Class Features for ${character.class}: ${JSON.stringify(classFeatures)}\n`;
@@ -925,18 +1280,23 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
     
             case 'subclass':
                 character.subclass = subclassSelect.value;
-    
                 // Optionally add subclass features to notes
                 const subclassFeatures = classes[character.class]?.subclasses[character.subclass]?.features || {};
                 character.notes += `Subclass Features for ${character.subclass}: ${JSON.stringify(subclassFeatures)}\n`;
                 break;
     
             case 'level':
-                character.level = parseInt(levelInput.value) || 1;
+                const levelInput = getElement('level');
+                if (levelInput) {
+                    character.level = parseInt(levelInput.value) || 1;
+                }
                 break;
     
             case 'hp':
-                character.hp = parseInt(document.getElementById('hp').value) || 10;
+                const hpInput = getElement('hp');
+                if (hpInput) {
+                    character.hp = parseInt(hpInput.value) || 10;
+                }
                 break;
     
             case 'abilityScores':
@@ -952,19 +1312,27 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
             case 'skills':
                 const skillElements = document.querySelectorAll('.skill');
                 skillElements.forEach(skillElement => {
-                    const skillName = skillElement.getAttribute('data-skill').toLowerCase();
-                    const proficient = skillElement.querySelector('.proficiency').checked;
-                    const bonus = parseInt(skillElement.querySelector('.bonus').value) || 0;
-                    character.skills[skillName] = { proficient, bonus };
+                    const skillName = skillElement.getAttribute('data-skill')?.toLowerCase();
+                    if (skillName) {
+                        const proficient = skillElement.querySelector('.proficiency')?.checked;
+                        const bonus = parseInt(skillElement.querySelector('.bonus')?.value) || 0;
+                        character.skills[skillName] = { proficient, bonus };
+                    }
                 });
                 break;
     
             case 'background':
-                character.background = document.getElementById('background').value || '';
+                const backgroundInput = getElement('background');
+                if (backgroundInput) {
+                    character.background = backgroundInput.value || '';
+                }
                 break;
     
             case 'alignment':
-                character.alignment = document.getElementById('alignment').value || '';
+                const alignmentInput = getElement('alignment');
+                if (alignmentInput) {
+                    character.alignment = alignmentInput.value || '';
+                }
                 break;
     
             case 'equipment':
@@ -973,8 +1341,11 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
                 break;
     
             case 'notes':
-                const additionalNotes = document.getElementById('notes').value || '';
-                character.notes += additionalNotes + "\n";
+                const notesInput = getElement('notes');
+                if (notesInput) {
+                    const additionalNotes = notesInput.value || '';
+                    character.notes += additionalNotes + "\n";
+                }
                 break;
     
             default:
@@ -1110,55 +1481,89 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
 
     // saveCharacterButton.addEventListener('click', showCharacterSheet);
 
-    saveCharacterButton.addEventListener('click', () => {
-        // Save form data into the character object
-        character.name = nameInput.value;
-        character.race = raceSelect.value;
-        character.class = classSelect.value;
-        character.subclass = subclassSelect.value;
-        character.level = parseInt(levelInput.value) || 1;
+    saveCharacterButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('Save character button clicked');
+        
+        try {
+            // Basic character information is already stored in the character object
+            // throughout the character creation process, so we don't need to update it here
     
-        // Save ability scores
-        abilityColumns.forEach(column => {
-            const abilityName = column.getAttribute('data-ability').toLowerCase();
-            const score = parseInt(column.querySelector('.score').value);
-            character.abilityScores[abilityName] = score;
-        });
+            // However, we might want to recalculate or update certain derived values
+            character.proficiencyBonus = Math.ceil(1 + (character.level / 4));
     
-        // Save skill proficiencies and bonuses
-        const skillElements = document.querySelectorAll('.skill');
-        skillElements.forEach(skillElement => {
-            const skillName = skillElement.getAttribute('data-skill').toLowerCase();
-            const proficient = skillElement.querySelector('.proficiency').checked;
-            const bonus = parseInt(skillElement.querySelector('.bonus').value) || 0;
-            character.skills[skillName] = { proficient, bonus };
-        });
-
-        updateCharInfo('name');
-        updateCharInfo('race');
-        updateCharInfo('class');
-        updateCharInfo('subclass');
-        updateCharInfo('level');
-        updateCharInfo('abilityScores');
-        updateCharInfo('skills');
-        updateCharInfo('hp');
+            // Calculate HP if it hasn't been manually set
+            if (!character.hp) {
+                const conModifier = Math.floor((character.abilityScores.constitution - 10) / 2);
+                const hitDice = getHitDiceByClass(character.class);
+                character.hp = (hitDice + conModifier) + ((character.level - 1) * (Math.floor(hitDice / 2) + 1 + conModifier));
+            }
     
-        console.log('Character saved:', character);
+            console.log('Character saved:', character);
+            updateCharacterSheet();
+            showCharacterSheet();
+        } catch (error) {
+            console.error('Error saving character:', error);
+            console.error('Error details:', error.stack);
+        }
     });
 
+    document.getElementById('addInventoryItem').addEventListener('click', addInventoryItem);
+    document.getElementById('updateCurrency').addEventListener('click', updateCurrency);
 
-    window.addEventListener('resize', adjustContentPadding);
+     window.addEventListener('resize', adjustContentPadding);
 
-    initializeRandomCharacterButton();
+    // initializeRandomCharacterButton();
 
     // Initialization
+    // function init() {
+    //     loadThemePreference();
+    //     initializeCharacter();
+    //     createAbilityScoreElements();
+    //     showCard(-1); // Start by showing the start menu
+    //     updateSkillModifiers();
+    //     adjustContentPadding();
+    //     initializeRandomCharacterButton(); // Add this line
+    // }
+
+    function resetCharacter() {
+        Object.keys(character).forEach(key => {
+            if (typeof character[key] === 'object' && character[key] !== null) {
+                Object.keys(character[key]).forEach(subKey => {
+                    if (typeof character[key][subKey] === 'object' && character[key][subKey] !== null) {
+                        Object.keys(character[key][subKey]).forEach(subSubKey => {
+                            character[key][subKey][subSubKey] = false;
+                        });
+                    } else {
+                        character[key][subKey] = 0;
+                    }
+                });
+            } else if (Array.isArray(character[key])) {
+                character[key] = [];
+            } else if (typeof character[key] === 'string') {
+                character[key] = '';
+            } else if (typeof character[key] === 'number') {
+                character[key] = 0;
+            }
+        });
+        character.level = 1;
+        character.ac = 10;
+        character.proficiencyBonus = 2;
+        character.speed = 30;
+        // Reset ability scores to 10
+        Object.keys(character.abilityScores).forEach(ability => {
+            character.abilityScores[ability] = 10;
+        });
+    }
+
     function init() {
         loadThemePreference();
         createAbilityScoreElements();
         showCard(-1); // Start by showing the start menu
         updateSkillModifiers();
         adjustContentPadding();
-        initializeRandomCharacterButton(); // Add this line
+        initializeRandomCharacterButton();
+        loadInventoryData(); // Add this line to load inventory data
     }
 
     Promise.all([
@@ -1169,6 +1574,6 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         classes = classesData;
         populateRaceSelect();
         populateClassSelect();
-        init();
+        init(); // Call init() here
     }).catch(error => console.error('Error loading data:', error));
 });

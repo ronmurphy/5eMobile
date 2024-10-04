@@ -594,3 +594,109 @@ body.theme-vampire {
     --accent-hover-dark: #4d0000;
     --text-on-accent: #ffffff;
 }
+
+.attribute-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+}
+
+.attribute-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.attribute-score {
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+.roll-button {
+    width: 100%;
+    margin-top: 5px;
+    padding: 5px;
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    position: relative; /* Add this for positioning the proficiency marker */
+}
+
+.roll-button:hover {
+    opacity: 0.8;
+}
+
+.proficient-marker {
+    color: var(--text-on-accent);
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Remove this class if it's not used elsewhere */
+.saving-throws-grid {
+    display: none;
+}
+#inventoryCard {
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.inventory-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.inventory-controls select {
+    flex-grow: 1;
+}
+
+#addInventoryItem {
+    padding: 5px 15px;
+}
+
+#inventoryList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#inventoryList li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.remove-item {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.currency-management {
+    margin-top: 20px;
+}
+
+.currency-inputs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.currency-inputs input {
+    width: 60px;
+}
+
+#updateCurrency {
+    width: 100%;
+}
