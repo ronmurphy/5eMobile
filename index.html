@@ -19,6 +19,7 @@
             <p>Once you've completed your character, you can save it and view your character sheet.</p>
             <div class="navigation-buttons">
                 <button class="next-button">Start</button>
+                <button id="randomCharacter" class="random-button">Random Character</button>
             </div>
         </div>
 
@@ -109,34 +110,36 @@
         </div>
 
         <div id="characterSheet" class="hidden">
-            <div class="character-header">
-                <div class="character-info">
-                    <h1 id="sheetCharacterName"></h1>
-                    <p id="sheetRaceClass"></p>
+            <div class="character-sheet-fixed-header">
+                <div class="character-header">
+                    <div class="character-info">
+                        <h1 id="sheetCharacterName"></h1>
+                        <p id="sheetRaceClass"></p>
+                    </div>
+                    <div class="character-stats">
+                        <div class="stat-box">
+                            <label>HP</label>
+                            <span id="sheetHP"></span>
+                        </div>
+                        <div class="stat-box">
+                            <label>AC</label>
+                            <span id="sheetAC"></span>
+                        </div>
+                        <div class="stat-box">
+                            <label>Initiative</label>
+                            <span id="sheetInitiative"></span>
+                        </div>
+                    </div>
                 </div>
-                <div class="character-stats">
-                    <div class="stat-box">
-                        <label>HP</label>
-                        <span id="sheetHP"></span>
-                    </div>
-                    <div class="stat-box">
-                        <label>AC</label>
-                        <span id="sheetAC"></span>
-                    </div>
-                    <div class="stat-box">
-                        <label>Initiative</label>
-                        <span id="sheetInitiative"></span>
-                    </div>
+                <div class="sheet-navigation">
+                    <button id="prevSection" class="nav-button">Previous</button>
+                    <span id="currentSection">Attributes</span>
+                    <button id="nextSection" class="nav-button">Next</button>
                 </div>
-            </div>
-            <div class="sheet-navigation">
-                <button id="prevSection" class="nav-button">Previous</button>
-                <span id="currentSection">Attributes</span>
-                <button id="nextSection" class="nav-button">Next</button>
             </div>
             <div class="sheet-content">
                 <div id="attributesSection" class="sheet-section">
-                    <h3>Attributes and Saving Throws</h3>
+                    <h3>Attributes</h3>  <!--and Saving Throws -->
                     <div id="sheetAttributes" class="attribute-grid"></div>
                     <div id="sheetSavingThrows" class="saving-throws-grid"></div>
                 </div>
@@ -145,6 +148,38 @@
                     <div id="sheetSkills" class="skills-grid"></div>
                 </div>
                 <!-- Add more sections as needed -->
+            </div>
+            <div id="optionsSection" class="sheet-section hidden">
+                <h3>Options</h3>
+                <div class="options-content">
+                    <div class="form-group">
+                        <label for="characterNotes">Character Notes:</label>
+                        <textarea id="characterNotes" rows="5"></textarea>
+                    </div>
+                    <div class="options-buttons">
+                        <button id="saveCharacterJson">Save to JSON</button>
+                        <button id="loadCharacterJson">Load from JSON</button>
+                        <button id="returnToCreator">Return to Creator</button>
+                        <button id="levelUp">Level Up (+1)</button>
+                    </div>
+                    <div class="theme-controls-embed">
+                        <div class="theme-color-container">
+                            <select id="themeColorEmbed">
+                                <option value="#007bff">Blue</option>
+                                <option value="#28a745">Green</option>
+                                <option value="#dc3545">Red</option>
+                                <option value="#ffc107">Yellow</option>
+                                <option value="#6f42c1">Purple</option>
+                            </select>
+                        </div>
+                        <div class="theme-mode-container">
+                            <label for="themeModeEmbed">
+                                Dark Mode
+                                <input type="checkbox" id="themeModeEmbed">
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -157,6 +192,9 @@
                 <option value="#dc3545">Red</option>
                 <option value="#ffc107">Yellow</option>
                 <option value="#6f42c1">Purple</option>
+                <option value="#004080">Sapphire</option>
+                <option value="#b75b00">PumpkinSpice</option>
+                <option value="#800000">Vampire</option>
             </select>
         </div>
         <div class="theme-mode-container">

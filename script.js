@@ -1,7 +1,11 @@
-let races = {};
-let classes = [];
-
 document.addEventListener('DOMContentLoaded', () => {
+
+    let races = {};
+    let classes = [];
+    // let character = {}; // Ensure character object is defined globally
+    // let abilityScores = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
+    
+
     const abilityScores = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'];
     const skills = [
         'Acrobatics', 'Animal Handling', 'Arcana', 'Athletics', 'Deception',
@@ -9,6 +13,76 @@ document.addEventListener('DOMContentLoaded', () => {
         'Nature', 'Perception', 'Performance', 'Persuasion', 'Religion',
         'Sleight of Hand', 'Stealth', 'Survival'
     ];
+
+    const character = {
+        name: '',
+        race: '',
+        class: '',
+        subclass: '',
+        level: 1,
+        background: '',
+        abilityScores: {
+            strength: 10,
+            dexterity: 10,
+            constitution: 10,
+            intelligence: 10,
+            wisdom: 10,
+            charisma: 10
+        },
+        skills: {
+            acrobatics: { proficient: false, bonus: 0 },
+            animalHandling: { proficient: false, bonus: 0 },
+            arcana: { proficient: false, bonus: 0 },
+            athletics: { proficient: false, bonus: 0 },
+            deception: { proficient: false, bonus: 0 },
+            history: { proficient: false, bonus: 0 },
+            insight: { proficient: false, bonus: 0 },
+            intimidation: { proficient: false, bonus: 0 },
+            investigation: { proficient: false, bonus: 0 },
+            medicine: { proficient: false, bonus: 0 },
+            nature: { proficient: false, bonus: 0 },
+            perception: { proficient: false, bonus: 0 },
+            performance: { proficient: false, bonus: 0 },
+            persuasion: { proficient: false, bonus: 0 },
+            religion: { proficient: false, bonus: 0 },
+            sleightOfHand: { proficient: false, bonus: 0 },
+            stealth: { proficient: false, bonus: 0 },
+            survival: { proficient: false, bonus: 0 }
+        },
+        feats: [],
+        inventory: [],
+        spells: [],
+        hp: 0,
+        maxHp: 0,
+        ac: 10,
+        initiative: 0,
+        proficiencyBonus: 2,
+        savingThrows: {
+            strength: { value: 0, proficient: false },
+            dexterity: { value: 0, proficient: false },
+            constitution: { value: 0, proficient: false },
+            intelligence: { value: 0, proficient: false },
+            wisdom: { value: 0, proficient: false },
+            charisma: { value: 0, proficient: false }
+        },
+        notes: '',
+        currency: {
+            copper: 0,
+            silver: 0,
+            electrum: 0,
+            gold: 0,
+            platinum: 0,
+            gems: ''
+        },
+        abilityScoreImprovementsLeft: 0,
+        speed: 30,
+        experiencePoints: 0,
+        languages: [],
+        traits: [],
+        spellSlots: {
+            1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+        }
+    };
 
     const startMenu = document.getElementById('startMenu');
     const characterCreator = document.getElementById('characterCreator');
@@ -41,8 +115,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextSectionButton = document.getElementById('nextSection');
     const currentSectionSpan = document.getElementById('currentSection');
 
-    const sections = ['attributesSection', 'skillsSection'];
+    const characterNotes = document.getElementById('characterNotes');
+    const saveCharacterJson = document.getElementById('saveCharacterJson');
+    const returnToCreator = document.getElementById('returnToCreator');
+    const levelUp = document.getElementById('levelUp');
+    const themeColorEmbed = document.getElementById('themeColorEmbed');
+    const themeModeEmbed = document.getElementById('themeModeEmbed');
+    //const randomCharacterButton = document.getElementById('randomCharacter');
+    const loadCharacterJson = document.getElementById('loadCharacterJson');
+
+
+    // Add 'Options' to your sections array
+    const sections = ['attributesSection', 'skillsSection', 'optionsSection'];
+
     let currentSectionIndex = 0;
+    let randomCharacterButton;
 
     const sheetSavingThrows = document.getElementById('sheetSavingThrows');
     
@@ -68,6 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let currentCardIndex = -1;
+
+
 
     function showCard(index) {
         if (index === -1) {
@@ -323,6 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const traitName = trait.replace(/([A-Z])/g, ' $1').trim();
                     li.innerHTML = `<strong>${traitName}:</strong> ${value}`;
                     raceTraitsList.appendChild(li);
+                    character.notes += `${traitName}: ${value}\n`;
                 }
             }
         }
@@ -330,7 +420,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateRandomName() {
         const names = ['Aragorn', 'Legolas', 'Gimli', 'Gandalf', 'Frodo', 'Samwise', 'Bilbo', 'Elrond', 'Galadriel', 'Thorin'];
-        return names[Math.floor(Math.random() * names.length)];
+        character.name = names[Math.floor(Math.random() * names.length)];
+        // return names[Math.floor(Math.random() * names.length)];
+        return character.name;
     }
 
     function adjustContentPadding() {
@@ -396,31 +488,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadThemePreference() {
-        const savedColor = localStorage.getItem('themeColor');
+        const savedColor = localStorage.getItem('themeColor') || '#007bff'; // Default to blue if no saved color
         const savedIsDark = localStorage.getItem('isDarkMode') === 'true';
         
-        if (savedColor) {
-            themeColorSelect.value = savedColor;
-        }
+        themeColorSelect.value = savedColor;
         themeModeToggle.checked = savedIsDark;
         
-        applyTheme(savedColor || themeColorSelect.value, savedIsDark);
+        applyTheme(savedColor, savedIsDark);
     }
 
 
-// sheet code here
 function showCharacterSheet() {
-    const header = document.querySelector('.header');
+    console.log('Showing character sheet');
+    const startMenu = document.getElementById('startMenu');
     const characterCreator = document.getElementById('characterCreator');
     const characterSheet = document.getElementById('characterSheet');
-
-    if (header) {
-        header.classList.add('hidden');
+    
+    if (startMenu && characterCreator && characterSheet) {
+        startMenu.classList.add('hidden');
+        characterCreator.classList.add('hidden');
+        characterSheet.classList.remove('hidden');
+        updateCharacterSheet();
+    } else {
+        console.error('One or more required elements not found');
+        if (!startMenu) console.error('Start menu element not found');
+        if (!characterCreator) console.error('Character creator element not found');
+        if (!characterSheet) console.error('Character sheet element not found');
     }
-    characterCreator.classList.add('hidden');
-    characterSheet.classList.remove('hidden');
-    updateCharacterSheet();
-    initializeCharacterSheet();
+    
+    // Only call initializeOptionsSection if it's defined
+    if (typeof initializeOptionsSection === 'function') {
+        initializeOptionsSection();
+    } else {
+        console.warn('initializeOptionsSection is not defined');
+    }
 }
 
 function sortRacesAlphabetically(races) {
@@ -434,27 +535,93 @@ function showCharacterCreator() {
     const header = document.querySelector('.header');
     const characterCreator = document.getElementById('characterCreator');
     const characterSheet = document.getElementById('characterSheet');
+    const themeControls = document.getElementById('themeControls');
 
     if (header) {
         header.classList.remove('hidden');
     }
     characterCreator.classList.remove('hidden');
     characterSheet.classList.add('hidden');
+    themeControls.style.display = ''; // Show theme controls again
+
+    // Reset body padding
+    document.body.style.paddingTop = '0';
 }
 
+
+
 function updateCharacterSheet() {
+    console.log('Updating character sheet');
+
+
     const characterName = document.getElementById('name').value;
     const characterRace = raceSelect.value;
     const characterClass = classSelect.value;
+    const characterLevel = parseInt(document.getElementById('level').value);
 
     sheetCharacterName.textContent = characterName;
-    sheetRaceClass.textContent = `${characterRace} ${characterClass}`;
+    // sheetRaceClass.textContent = `${characterRace} ${characterClass}`;
 
 
-    // You'll need to implement logic to calculate these values
-    sheetHP.textContent = '10';
-    sheetAC.textContent = '15';
-    sheetInitiative.textContent = '+2';
+    const alignment = character.alignment || 'Chaotic Good';
+    const level = character.level || 1;  // Default level to 1 if not set
+    const subclass = character.subclass ? `(${character.subclass})` : '';  // Add subclass only if it's assigned
+
+    // Update the sheetRaceClass text to include race - level - class (subclass) - alignment
+    const sheetRaceClass = document.getElementById('sheetRaceClass');
+    sheetRaceClass.textContent = `${character.race || 'Unknown Race'} - Level ${level} - ${character.class || 'Unknown Class'} ${subclass} - ${alignment}`;
+
+
+    // Calculate ability modifiers
+    const abilityModifiers = {};
+    abilityScores.forEach(ability => {
+        const abilityButton = document.querySelector(`[data-ability="${ability.toLowerCase()}"]`);
+        const score = parseInt(abilityButton.dataset.value) || 10;
+        abilityModifiers[ability.toLowerCase()] = Math.floor((score - 10) / 2);
+    });
+
+    // Calculate HP
+    const hitDice = {
+        'Barbarian': 12, 'Fighter': 10, 'Paladin': 10, 'Ranger': 10,
+        'Bard': 8, 'Cleric': 8, 'Druid': 8, 'Monk': 8, 'Rogue': 8, 'Warlock': 8,
+        'Sorcerer': 6, 'Wizard': 6
+    };
+    const classHitDice = hitDice[characterClass] || 8;
+    const hp = classHitDice + abilityModifiers.constitution + 
+        ((characterLevel - 1) * (Math.floor(classHitDice / 2) + 1 + abilityModifiers.constitution));
+
+    sheetHP.textContent = hp;
+    sheetAC.textContent = 10 + abilityModifiers.dexterity;
+    sheetInitiative.textContent = abilityModifiers.dexterity >= 0 ? 
+        `+${abilityModifiers.dexterity}` : abilityModifiers.dexterity;
+
+
+    updateSheetAttributes();
+    updateSheetSavingThrows();
+    updateSheetSkills();
+
+
+    updateCharInfo('name');
+    updateCharInfo('race');
+    updateCharInfo('class');
+    updateCharInfo('subclass'); // Adding subclass to the update
+    updateCharInfo('level');    // Adding level to the update
+    updateCharInfo('abilityScores');
+    updateCharInfo('skills');
+    updateCharInfo('hp');
+    updateCharInfo('background');
+    updateCharInfo('alignment');
+    updateCharInfo('equipment');
+    updateCharInfo('notes');
+}
+
+function updateAbilityScores() {
+    for (const [ability, score] of Object.entries(character.abilityScores)) {
+        const abilityElement = document.querySelector(`[data-ability="${ability}"]`);
+        if (abilityElement) {
+            abilityElement.textContent = `${ability.charAt(0).toUpperCase() + ability.slice(1)}: ${score}`;
+        }
+    }
 }
 
 function updateSheetAttributes() {
@@ -497,6 +664,19 @@ function updateSheetSkills() {
         skillBox.appendChild(createRollButton(skill, modifier));
         sheetSkills.appendChild(skillBox);
     });
+}
+
+function checkAbilityScoreImprovement() {
+    // Implement ability score improvement logic here
+    if ([4, 8, 12, 16, 19].includes(character.level)) {
+        // Prompt user for ability score improvement
+        console.log('Ability Score Improvement available');
+    }
+}
+
+function checkNewFeats() {
+    // Placeholder for feat checking logic
+    console.log('Checking for new feats');
 }
 
 function navigateSection(direction) {
@@ -562,6 +742,273 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         }, 2500);
     }
 
+    function saveCharacterNotes() {
+        // Assuming you have a character object
+        character.notes = characterNotes.value;
+    }
+
+    function loadCharacterNotes() {
+        // Assuming you have a character object
+        characterNotes.value = character.notes || '';
+    }
+
+
+    function generateRandomCharacter() {
+        console.log('Generating random character...');
+    
+        // Helper function to get a random item from an array
+        const getRandomItem = (array) => array[Math.floor(Math.random() * array.length)];
+    
+        // Generate random race
+        const raceNames = Object.keys(races);
+        const randomRace = getRandomItem(raceNames);
+        console.log('Selected random race:', randomRace);
+        raceSelect.value = randomRace;
+        const raceTraits = races[randomRace].traits;
+    
+        // Generate random class
+        const randomClass = getRandomItem(classes);
+        console.log('Selected random class:', randomClass.name);
+        classSelect.value = randomClass.name;
+    
+        // Generate random name
+        const randomName = generateRandomName();
+        console.log('Generated random name:', randomName);
+        document.getElementById('name').value = randomName;
+
+    
+        // Generate random ability scores
+        abilityScores.forEach(ability => {
+            const abilityButton = document.querySelector(`[data-ability="${ability.toLowerCase()}"]`);
+            if (abilityButton) {
+                const scores = Array(4).fill().map(() => Math.floor(Math.random() * 6) + 1);
+                const total = scores.sort((a, b) => b - a).slice(0, 3).reduce((sum, score) => sum + score, 0);
+                const finalScore = total + (raceTraits.abilityScoreIncrease?.[ability.toLowerCase()] || 0);
+                abilityButton.textContent = `${ability}: ${finalScore}`;
+                abilityButton.dataset.value = finalScore;
+                abilityButton.disabled = true;
+                updateAbilityModifier(ability.toLowerCase());
+            }
+        });
+    
+        // Set random level (1-20)
+        const randomLevel = Math.floor(Math.random() * 20) + 1;
+        document.getElementById('level').value = randomLevel;
+    
+        // Update subclass options
+        updateSubclassSelect();
+        if (subclassSelect.options.length > 1) {
+            const randomSubclassIndex = Math.floor(Math.random() * (subclassSelect.options.length - 1)) + 1;
+            subclassSelect.selectedIndex = randomSubclassIndex;
+        }
+    
+        // Update class features and race traits
+        updateClassFeatures();
+        updateRaceTraits();
+    
+        // Randomly select proficient skills
+        const availableSkills = Array.from(skillList.children).map(skill => skill.textContent.split(' (')[0]);
+        const numSkills = 2 + (raceTraits.extraSkills || 0); // Assuming 2 skills from class, plus any racial bonuses
+        const proficientSkills = [];
+        for (let i = 0; i < numSkills; i++) {
+            const skill = getRandomItem(availableSkills.filter(s => !proficientSkills.includes(s)));
+            proficientSkills.push(skill);
+        }
+    
+        // Update skill list with proficiencies
+        Array.from(skillList.children).forEach(skillItem => {
+            const skillName = skillItem.textContent.split(' (')[0];
+            if (proficientSkills.includes(skillName)) {
+                skillItem.classList.add('proficient');
+                skillItem.textContent += ' (Proficient)';
+            }
+        });
+    
+        console.log('Random character generation complete');
+        updateCharInfo('name');
+        updateCharInfo('race');
+        updateCharInfo('class');
+        updateCharInfo('subclass');
+        updateCharInfo('abilityScores');
+        showCharacterSheet();
+    }
+    
+    // Modify the initializeRandomCharacterButton function
+    function initializeRandomCharacterButton() {
+        const randomCharacterButton = document.getElementById('randomCharacter');
+        if (randomCharacterButton) {
+            // Remove any existing event listeners
+            randomCharacterButton.removeEventListener('click', handleRandomCharacterClick);
+            // Add the new event listener
+            randomCharacterButton.addEventListener('click', handleRandomCharacterClick);
+        } else {
+            console.error('Random Character button not found in the DOM');
+        }
+    }
+    
+    // Create a separate function to handle the click event
+    function handleRandomCharacterClick(event) {
+        event.preventDefault();
+        console.log('Random Character button clicked');
+        try {
+            generateRandomCharacter();
+        } catch (error) {
+            console.error('Error generating random character:', error);
+        }
+    }
+
+    function loadCharacterFromJson() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const loadedCharacter = JSON.parse(e.target.result);
+                    Object.assign(character, loadedCharacter);
+                    updateCharacterSheet();
+                    showCharacterSheet();
+                } catch (error) {
+                    console.error('Error loading character:', error);
+                    alert('Error loading character. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    function initializeOptionsSection() {
+        const characterNotes = document.getElementById('character-notes');
+        if (characterNotes) {
+            characterNotes.value = character.notes || '';
+        }
+    
+        const themeColorSelect = document.getElementById('color-theme');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+    
+        if (themeColorSelect && darkModeToggle) {
+            themeColorSelect.value = getCookie('colorTheme') || 'default';
+            darkModeToggle.checked = getCookie('darkMode') === 'true';
+        }
+    }
+
+    function updateCharInfo(field) {
+        switch (field) {
+            case 'name':
+                character.name = document.getElementById('name').value;
+                break;
+    
+            case 'race':
+                character.race = raceSelect.value;
+    
+                // Append racial abilities/traits to notes if they aren't dedicated fields
+                const raceTraits = races[character.race]?.traits || {};
+                character.notes += `Racial Traits for ${character.race}: ${JSON.stringify(raceTraits)}\n`;
+                break;
+    
+            case 'class':
+                character.class = classSelect.value;
+    
+                // Optionally add class features to notes if not handled elsewhere
+                const classFeatures = classes[character.class]?.features || {};
+                character.notes += `Class Features for ${character.class}: ${JSON.stringify(classFeatures)}\n`;
+                break;
+    
+            case 'subclass':
+                character.subclass = subclassSelect.value;
+    
+                // Optionally add subclass features to notes
+                const subclassFeatures = classes[character.class]?.subclasses[character.subclass]?.features || {};
+                character.notes += `Subclass Features for ${character.subclass}: ${JSON.stringify(subclassFeatures)}\n`;
+                break;
+    
+            case 'level':
+                character.level = parseInt(levelInput.value) || 1;
+                break;
+    
+            case 'hp':
+                character.hp = parseInt(document.getElementById('hp').value) || 10;
+                break;
+    
+            case 'abilityScores':
+                abilityScores.forEach(ability => {
+                    const abilityButton = document.querySelector(`[data-ability="${ability.toLowerCase()}"]`);
+                    if (abilityButton) {
+                        const score = parseInt(abilityButton.dataset.value);
+                        character.abilityScores[ability.toLowerCase()] = score;
+                    }
+                });
+                break;
+    
+            case 'skills':
+                const skillElements = document.querySelectorAll('.skill');
+                skillElements.forEach(skillElement => {
+                    const skillName = skillElement.getAttribute('data-skill').toLowerCase();
+                    const proficient = skillElement.querySelector('.proficiency').checked;
+                    const bonus = parseInt(skillElement.querySelector('.bonus').value) || 0;
+                    character.skills[skillName] = { proficient, bonus };
+                });
+                break;
+    
+            case 'background':
+                character.background = document.getElementById('background').value || '';
+                break;
+    
+            case 'alignment':
+                character.alignment = document.getElementById('alignment').value || '';
+                break;
+    
+            case 'equipment':
+                const equipmentList = document.querySelectorAll('.equipment-item');
+                character.equipment = Array.from(equipmentList).map(item => item.textContent);
+                break;
+    
+            case 'notes':
+                const additionalNotes = document.getElementById('notes').value || '';
+                character.notes += additionalNotes + "\n";
+                break;
+    
+            default:
+                console.warn(`Unhandled character field: ${field}`);
+                break;
+        }
+        console.log(`Updated character ${field}:`, character[field]);
+    }
+    
+
+    characterNotes.addEventListener('input', saveCharacterNotes);
+
+    saveCharacterJson.addEventListener('click', () => {
+        // Implement JSON saving logic here
+        const characterJson = JSON.stringify(character);
+        const blob = new Blob([characterJson], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${character.name || 'character'}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    returnToCreator.addEventListener('click', showCharacterCreator);
+
+    levelUp.addEventListener('click', () => {
+        // Implement level up logic here
+        character.level++;
+        checkAbilityScoreImprovement();
+        checkNewFeats();
+        updateCharacterSheet();
+    });
+
     // Theme event listeners
     themeColorSelect.addEventListener('change', (e) => {
         const newColor = e.target.value;
@@ -569,12 +1016,22 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         applyTheme(newColor, isDark);
         saveThemePreference(newColor, isDark);
     });
-
+    
     themeModeToggle.addEventListener('change', (e) => {
         const isDark = e.target.checked;
         const currentColor = themeColorSelect.value;
         applyTheme(currentColor, isDark);
         saveThemePreference(currentColor, isDark);
+    });
+
+    themeColorEmbed.addEventListener('change', (e) => {
+        const newColor = e.target.value;
+        applyTheme(newColor, themeModeEmbed.checked);
+    });
+
+    themeModeEmbed.addEventListener('change', (e) => {
+        const isDark = e.target.checked;
+        applyTheme(themeColorEmbed.value, isDark);
     });
 
     // Event Listeners
@@ -645,10 +1102,54 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         });
     }
 
-    saveCharacterButton.addEventListener('click', showCharacterSheet);
+ //   initializeRandomCharacterButton();
+    
+    loadCharacterJson.addEventListener('click', loadCharacterFromJson);
+
+    document.addEventListener('DOMContentLoaded', loadThemePreference);
+
+    // saveCharacterButton.addEventListener('click', showCharacterSheet);
+
+    saveCharacterButton.addEventListener('click', () => {
+        // Save form data into the character object
+        character.name = nameInput.value;
+        character.race = raceSelect.value;
+        character.class = classSelect.value;
+        character.subclass = subclassSelect.value;
+        character.level = parseInt(levelInput.value) || 1;
+    
+        // Save ability scores
+        abilityColumns.forEach(column => {
+            const abilityName = column.getAttribute('data-ability').toLowerCase();
+            const score = parseInt(column.querySelector('.score').value);
+            character.abilityScores[abilityName] = score;
+        });
+    
+        // Save skill proficiencies and bonuses
+        const skillElements = document.querySelectorAll('.skill');
+        skillElements.forEach(skillElement => {
+            const skillName = skillElement.getAttribute('data-skill').toLowerCase();
+            const proficient = skillElement.querySelector('.proficiency').checked;
+            const bonus = parseInt(skillElement.querySelector('.bonus').value) || 0;
+            character.skills[skillName] = { proficient, bonus };
+        });
+
+        updateCharInfo('name');
+        updateCharInfo('race');
+        updateCharInfo('class');
+        updateCharInfo('subclass');
+        updateCharInfo('level');
+        updateCharInfo('abilityScores');
+        updateCharInfo('skills');
+        updateCharInfo('hp');
+    
+        console.log('Character saved:', character);
+    });
+
 
     window.addEventListener('resize', adjustContentPadding);
 
+    initializeRandomCharacterButton();
 
     // Initialization
     function init() {
@@ -657,6 +1158,7 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         showCard(-1); // Start by showing the start menu
         updateSkillModifiers();
         adjustContentPadding();
+        initializeRandomCharacterButton(); // Add this line
     }
 
     Promise.all([

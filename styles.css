@@ -9,7 +9,6 @@
     --button-text-color: #ffffff;
     --border-radius: 8px;
     --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --accent-color: #007bff;
     --accent-hover-light: hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) * 0.8));
     --accent-hover-dark: hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) * 1.2));
     --text-on-accent: #ffffff;
@@ -42,7 +41,6 @@ body.dark-mode {
     --card-background: #1e1e1e;
     --border-color: #333;
     --button-text-color: var(--text-color);
-    --accent-color: #4da6ff; /* Lighter blue for dark mode */
     --text-on-accent: #000000;
     --button-hover-overlay: rgba(255, 255, 255, 0.2);
 }
@@ -56,9 +54,22 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0 auto;
 }
 
-h1, h2, h3 {
+/* h1, h2, h3 {
     color: var(--primary-color);
     margin-bottom: 10px;
+} */
+
+button, .accent-button {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+}
+
+button:hover, .accent-button:hover {
+    background-color: var(--accent-hover-light);
+}
+
+body.dark-mode button:hover, body.dark-mode .accent-button:hover {
+    background-color: var(--accent-hover-dark);
 }
 
 .card {
@@ -333,13 +344,20 @@ button:hover {
     padding: 20px;
     box-sizing: border-box;
 }
+.character-sheet-fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--background-color);
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
 .character-header {
     background-color: var(--primary-color);
     color: var(--text-on-accent);
-    padding: 20px;
-    border-radius: var(--border-radius);
-    margin-bottom: 20px;
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -391,16 +409,16 @@ button:hover {
 }
 
 .sheet-navigation {
-    flex: 0 0 auto;
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
-    margin-bottom: 20px;
+    background-color: var(--card-background);
 }
 
 .sheet-content {
-    flex: 1 1 auto;
+    margin-top: 120px; /* Adjust this value based on the actual height of your fixed header */
+    padding: 20px;
     overflow-y: auto;
 }
 
@@ -426,7 +444,7 @@ button:hover {
     margin-bottom: 20px;
 }
 
-.attribute-grid {
+/* .attribute-grid {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
 }
 
@@ -436,7 +454,7 @@ button:hover {
 
 .skills-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-}
+} */
 
 .attribute-box, .saving-throw-box, .skill-box {
     background-color: var(--secondary-color);
@@ -463,9 +481,13 @@ button:hover {
     }
 
     .character-stats {
-        margin-top: 15px;
+        margin-top: 10px;
         width: 100%;
         justify-content: space-between;
+    }
+
+    .sheet-content {
+        margin-top: 160px; /* Adjust for smaller screens */
     }
 }
 
@@ -510,4 +532,65 @@ body.dark-mode .roll-button:hover {
 
 .notification.fade-out {
     opacity: 0;
+}
+#characterNotes {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.options-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.options-buttons button {
+    flex: 1;
+    margin: 0 5px;
+}
+
+.theme-controls-embed {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+}
+
+.theme-controls-embed .theme-color-container,
+.theme-controls-embed .theme-mode-container {
+    flex: 1;
+}
+
+#themeColorEmbed {
+    width: 100%;
+}
+/* Sapphire theme */
+body.theme-sapphire {
+    --accent-color: #004080;
+    --accent-hover-light: #3373b3;
+    --accent-hover-dark: #000d4d;
+    --text-on-accent: #ffffff;
+}
+
+/* PumpkinSpice theme */
+body.theme-pumpkinspice {
+    --accent-color: #b75b00;
+    --accent-hover-light: #ea8e33;
+    --accent-hover-dark: #842800;
+    --text-on-accent: #ffffff;
+}
+
+/* Vampire theme */
+body.theme-vampire {
+    --accent-color: #800000;
+    --accent-hover-light: #b33333;
+    --accent-hover-dark: #4d0000;
+    --text-on-accent: #ffffff;
 }
