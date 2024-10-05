@@ -54,10 +54,29 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0 auto;
 }
 
-/* h1, h2, h3 {
-    color: var(--primary-color);
-    margin-bottom: 10px;
-} */
+/* Sapphire theme */
+body.theme-sapphire {
+    --accent-color: #004080;
+    --accent-hover-light: #3373b3;
+    --accent-hover-dark: #000d4d;
+    --text-on-accent: #ffffff;
+}
+
+/* PumpkinSpice theme */
+body.theme-pumpkinspice {
+    --accent-color: #b75b00;
+    --accent-hover-light: #ea8e33;
+    --accent-hover-dark: #842800;
+    --text-on-accent: #ffffff;
+}
+
+/* Vampire theme */
+body.theme-vampire {
+    --accent-color: #800000;
+    --accent-hover-light: #b33333;
+    --accent-hover-dark: #4d0000;
+    --text-on-accent: #ffffff;
+}
 
 button, .accent-button {
     background-color: var(--accent-color);
@@ -570,29 +589,6 @@ body.dark-mode .roll-button:hover {
 
 #themeColorEmbed {
     width: 100%;
-}
-/* Sapphire theme */
-body.theme-sapphire {
-    --accent-color: #004080;
-    --accent-hover-light: #3373b3;
-    --accent-hover-dark: #000d4d;
-    --text-on-accent: #ffffff;
-}
-
-/* PumpkinSpice theme */
-body.theme-pumpkinspice {
-    --accent-color: #b75b00;
-    --accent-hover-light: #ea8e33;
-    --accent-hover-dark: #842800;
-    --text-on-accent: #ffffff;
-}
-
-/* Vampire theme */
-body.theme-vampire {
-    --accent-color: #800000;
-    --accent-hover-light: #b33333;
-    --accent-hover-dark: #4d0000;
-    --text-on-accent: #ffffff;
 }
 
 .attribute-box {
