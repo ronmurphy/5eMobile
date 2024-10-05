@@ -116,10 +116,23 @@
                         <h1 id="sheetCharacterName"></h1>
                         <p id="sheetRaceClass"></p>
                     </div>
+                    <div class="rest-buttons">
+                        <button id="shortRestButton">Short Rest</button>
+                        <button id="longRestButton">Long Rest</button>
+                    </div>
                     <div class="character-stats">
                         <div class="stat-box">
-                            <label>HP</label>
-                            <span id="sheetHP"></span>
+                            <label>HP: <span id="sheetHP"></span></label>
+                            <button id="modifyHPButton">Modify HP</button>
+                        </div>
+                        <div id="hpModal" class="modal">
+                            <div class="modal-content">
+                                <h2>Modify HP</h2>
+                                <input type="number" id="hpChangeAmount" placeholder="Enter amount">
+                                <button id="healButton">Heal</button>
+                                <button id="damageButton">Damage</button>
+                                <button id="closeModal">Close</button>
+                            </div>
                         </div>
                         <div class="stat-box">
                             <label>AC</label>
@@ -127,7 +140,7 @@
                         </div>
                         <div class="stat-box">
                             <label>Initiative</label>
-                            <span id="sheetInitiative"></span>
+                            <button id="rollInitiativeButton"></button>
                         </div>
                     </div>
                 </div>
@@ -173,6 +186,19 @@
                         <button id="updateCurrency" class="themed-button">Update Currency</button>
                     </div>
                 </div>
+                <div id="spellcastingSection" class="sheet-section hidden">
+                    <h3>Spellcasting</h3>
+                    <div id="spellSlots">
+                        <!-- Spell slots will be dynamically added here -->
+                    </div>
+                    <div id="spellManagement">
+                        <select id="spellSelect"></select>
+                        <button id="addSpell">Add Spell</button>
+                    </div>
+                    <div id="spellList">
+                        <!-- Spell list categories will be dynamically added here -->
+                    </div>
+                </div>
                 <div id="optionsSection" class="sheet-section hidden">
                     <h3>Options</h3>
                     <div class="options-content">
@@ -189,23 +215,6 @@
                         <button id="loadCharacterJson">Load from JSON</button>
                         <button id="returnToCreator">Return to Creator</button>
                         <button id="levelUp">Level Up (+1)</button>
-                    </div>
-                    <div class="theme-controls-embed">
-                        <div class="theme-color-container">
-                            <select id="themeColorEmbed">
-                                <option value="#007bff">Blue</option>
-                                <option value="#28a745">Green</option>
-                                <option value="#dc3545">Red</option>
-                                <option value="#ffc107">Yellow</option>
-                                <option value="#6f42c1">Purple</option>
-                            </select>
-                        </div>
-                        <div class="theme-mode-container">
-                            <label for="themeModeEmbed">
-                                Dark Mode
-                                <input type="checkbox" id="themeModeEmbed">
-                            </label>
-                        </div>
                     </div>
                 </div>
             </div>

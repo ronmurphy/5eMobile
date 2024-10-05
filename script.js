@@ -17,12 +17,22 @@ let items = [];
         'Sleight of Hand', 'Stealth', 'Survival'
     ];
 
+
+    let spells = [];
+const spellLevels = ['Cantrips', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
+
     const character = {
         name: '',
         race: '',
         class: '',
         subclass: '',
         level: 1,
+        hitDie: {
+            number: 1,  // This will always be 1 for D&D 5e
+            faces: 8    // Default to d8, will be updated based on class
+        },
+        maxHitDice: 1,  // This will always equal the character's level
+        currentHitDice: 1,
         background: '',
         abilityScores: {
             strength: 10,
@@ -131,8 +141,7 @@ let items = [];
 
 
     // Add 'Options' to your sections array
-    const sections = ['attributesSection', 'skillsSection', 'inventorySection', 'optionsSection'];
-    let currentSectionIndex = 0;
+    const sections = ['attributesSection', 'skillsSection', 'inventorySection', 'spellcastingSection', 'optionsSection'];    let currentSectionIndex = 0;
     let randomCharacterButton;
 
     const sheetSavingThrows = document.getElementById('sheetSavingThrows');
@@ -160,6 +169,37 @@ let items = [];
 
     let currentCardIndex = -1;
 
+
+    const modifyHPButton = document.getElementById('modifyHPButton');
+const hpModal = document.getElementById('hpModal');
+const closeModal = document.getElementById('closeModal');
+const healButton = document.getElementById('healButton');
+const damageButton = document.getElementById('damageButton');
+const hpChangeAmount = document.getElementById('hpChangeAmount');
+
+
+const rollInitiativeButton = document.getElementById('rollInitiativeButton');
+
+rollInitiativeButton.addEventListener('click', () => {
+    const initiativeModifier = character.initiative || 0;
+    const roll = rollD20();
+    const total = roll + initiativeModifier;
+    showNotification(`Initiative Roll: ${roll} + ${initiativeModifier} = ${total}`);
+});
+
+function updateInitiativeDisplay() {
+    const initiativeModifier = character.initiative || 0;
+    rollInitiativeButton.textContent = initiativeModifier >= 0 ? `+${initiativeModifier}` : initiativeModifier;
+}
+
+
+
+
+
+function updateHPDisplay() {
+    const hpElement = document.getElementById('sheetHP');
+    if (hpElement) hpElement.textContent = `${character.hp}/${character.maxHp}`;
+}
 
     function showCard(index) {
         if (index === -1) {
@@ -553,19 +593,14 @@ function showCharacterCreator() {
 
 function updateCharacterSheet() {
     console.log('Updating character sheet');
+    console.log('Current character state:', character);
     console.log('Updating character sheet with new inventory:', character.inventory);
     console.log('Updating character sheet with new currency:', character.currency);
 
     try {
         // Basic information
-        const nameElement = document.getElementById('sheetCharacterName');
-        if (nameElement) nameElement.textContent = character.name || 'Unnamed Character';
-
-        const raceClassElement = document.getElementById('sheetRaceClass');
-        if (raceClassElement) {
-            const alignment = character.alignment || 'Chaotic Good'; // Default alignment
-            raceClassElement.textContent = `${character.race || 'Unknown Race'} - Level ${character.level || 1} ${character.class || 'Unknown Class'} (${character.subclass || ''}) - ${alignment}`;
-        }
+        sheetCharacterName.textContent = character.name || 'Unnamed Character';
+        sheetRaceClass.textContent = `${character.race || 'Unknown Race'} - Level ${character.level || 1} ${character.class || 'Unknown Class'} (${character.subclass || ''}) - ${character.alignment || 'Chaotic Good'}`;
         
         // Ability scores and saving throws
         if (document.getElementById('sheetAttributes')) {
@@ -580,20 +615,27 @@ function updateCharacterSheet() {
         // Combat stats
         const hpElement = document.getElementById('sheetHP');
         if (hpElement) hpElement.textContent = `${character.hp || 0}/${character.maxHp || 0}`;
-
+        
         const acElement = document.getElementById('sheetAC');
         if (acElement) acElement.textContent = character.ac || 10;
-
+        
         const initiativeElement = document.getElementById('sheetInitiative');
         if (initiativeElement) {
             const initiative = character.initiative || 0;
             initiativeElement.textContent = initiative >= 0 ? `+${initiative}` : initiative;
         }
         
+        // Update Hit Dice display
+        const hitDiceElement = document.getElementById('hitDice');
+        if (hitDiceElement) {
+            hitDiceElement.textContent = `Hit Dice: ${character.currentHitDice}d${character.hitDie.faces}`;
+        }
+
+
         // Other characteristics
         const speedElement = document.getElementById('sheetSpeed');
         if (speedElement) speedElement.textContent = character.speed || 30;
-
+        
         const profBonusElement = document.getElementById('sheetProficiencyBonus');
         if (profBonusElement) profBonusElement.textContent = `+${character.proficiencyBonus || 2}`;
         
@@ -605,20 +647,30 @@ function updateCharacterSheet() {
         // Features and Traits
         updateFeaturesAndTraits();
         
-        // Spellcasting
-        if (typeof updateSpellcasting === 'function') {
-            updateSpellcasting();
-        } else {
-            console.warn('updateSpellcasting function not defined. Skipping spell updates.');
+        if (document.getElementById('spellcastingSection')) {
+            character.spellcasting.spellSlots = calculateSpellSlots(character.class.toLowerCase(), character.level);
+            // Reset current spell slots to max
+            for (let level in character.spellcasting.spellSlots) {
+                character.spellcasting.currentSpellSlots[level] = character.spellcasting.spellSlots[level];
+            }
+            initializeSpellcasting();
+            updateSpellcastingUI();
+        }
+
+        if (character.spellcasting) {
+            updateSpellcastingUI();
         }
         
         // Notes
         const notesElement = document.getElementById('characterNotes');
         if (notesElement) notesElement.value = character.notes || '';
-
+        
         // Currency
         updateCurrencyDisplay();
 
+        updateHPDisplay();
+        updateInitiativeDisplay();
+        
         console.log('Character sheet updated successfully');
     } catch (error) {
         console.error('Error updating character sheet:', error);
@@ -716,17 +768,21 @@ function updateSpellcasting() {
     }
 }
 
+// function loadInventoryData() {
+//     Promise.all([
+//         fetch('weapons.json').then(response => response.json()),
+//         fetch('armor.json').then(response => response.json()),
+//         fetch('items.json').then(response => response.json())
+//     ]).then(([weaponsData, armorsData, itemsData]) => {
+//         weapons = weaponsData;
+//         armors = armorsData;
+//         items = itemsData;
+//         populateDropdowns();
+//     }).catch(error => console.error('Error loading inventory data:', error));
+// }
+
 function loadInventoryData() {
-    Promise.all([
-        fetch('weapons.json').then(response => response.json()),
-        fetch('armor.json').then(response => response.json()),
-        fetch('items.json').then(response => response.json())
-    ]).then(([weaponsData, armorsData, itemsData]) => {
-        weapons = weaponsData;
-        armors = armorsData;
-        items = itemsData;
-        populateDropdowns();
-    }).catch(error => console.error('Error loading inventory data:', error));
+    populateDropdowns();
 }
 
 function populateDropdowns() {
@@ -899,7 +955,8 @@ function updateSheetSkills() {
         const skillBox = document.createElement('div');
         skillBox.classList.add('skill-box');
         skillBox.innerHTML = `
-            <span class="skill-name">${skillName} (${associatedAbility.charAt(0).toUpperCase() + associatedAbility.slice(1)})</span>
+            <div class="skill-name">${skillName}</div>
+            <div class="skill-ability">(${associatedAbility.charAt(0).toUpperCase() + associatedAbility.slice(1)})</div>
             <button class="skill-bonus roll-button" data-skill="${skillName}" data-bonus="${totalBonus}">${bonusString}</button>
             ${skillInfo.proficient ? '<span class="proficient-marker">●</span>' : ''}
         `;
@@ -982,6 +1039,7 @@ function initializeCharacterSheet() {
     updateSheetAttributes();
     updateSheetSavingThrows();
     updateSheetSkills();
+    updateSpellcastingUI();  // Add this line
 }
 
 prevSectionButton.addEventListener('click', () => navigateSection(-1));
@@ -1028,7 +1086,139 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         characterNotes.value = character.notes || '';
     }
 
+    function updateCharacterClass() {
+        const selectedClass = classes.find(c => c.name === classSelect.value);
+        if (selectedClass) {
+            character.class = selectedClass.name;
+            character.hitDie.faces = selectedClass.hd.faces;
+            character.currentHitDice = character.level;
+            updateClassFeatures();
+        }
+    }
 
+    function shortRest() {
+        console.log("Short rest function called");
+        if (character.currentHitDice <= 0) {
+            alert("You don't have any Hit Dice left to spend.");
+            return;
+        }
+    
+        let hitDiceSpent = 0;
+        const maxHitDice = character.currentHitDice;
+    
+        while (hitDiceSpent < maxHitDice) {
+            const wantToSpendHitDie = confirm(`Do you want to spend a Hit Die? (${hitDiceSpent} spent so far, ${character.currentHitDice} remaining)`);
+            if (!wantToSpendHitDie) break;
+    
+            const hitDieRoll = rollDie(character.hitDie.faces);
+            const conModifier = Math.floor((character.abilityScores.constitution - 10) / 2);
+            const hpRegained = hitDieRoll + conModifier;
+    
+            character.hp = Math.min(character.hp + hpRegained, character.maxHp);
+            hitDiceSpent++;
+            character.currentHitDice--;
+    
+            alert(`You regained ${hpRegained} hit points. Current HP: ${character.hp}/${character.maxHp}`);
+        }
+    
+        updateCharacterSheet();
+    }
+    
+    function longRest() {
+        console.log("Long rest function called");
+        // Restore hit points to maximum
+        character.hp = character.maxHp;
+    
+        // Restore spell slots
+        for (let level in character.spellcasting.spellSlots) {
+            character.spellcasting.currentSpellSlots[level] = character.spellcasting.spellSlots[level];
+        }
+    
+        // Restore half of max Hit Dice (minimum of 1)
+        const hitDiceRestored = Math.max(1, Math.floor(character.level / 2));
+        character.currentHitDice = Math.min(character.level, character.currentHitDice + hitDiceRestored);
+    
+        updateCharacterSheet();
+        alert("You've completed a long rest. Your hit points are restored to maximum, spell slots are refreshed, and you've regained some Hit Dice.");
+    }
+
+    function rollDie(sides) {
+        return Math.floor(Math.random() * sides) + 1;
+    }
+
+    // document.addEventListener('DOMContentLoaded', function() {
+    //     const shortRestButton = document.getElementById('shortRestButton');
+    //     const longRestButton = document.getElementById('longRestButton');
+    
+    //     if (shortRestButton) {
+    //         shortRestButton.addEventListener('click', function() {
+    //             console.log('Short rest button clicked');
+                
+    //             if (character.currentHitDice <= 0) {
+    //                 alert("You don't have any Hit Dice left to spend.");
+    //                 return;
+    //             }
+    
+    //             let hitDiceSpent = 0;
+    //             const maxHitDice = character.currentHitDice;
+    
+    //             while (hitDiceSpent < maxHitDice) {
+    //                 const wantToSpendHitDie = confirm(`Do you want to spend a Hit Die? (${hitDiceSpent} spent so far, ${character.currentHitDice} remaining)`);
+    //                 if (!wantToSpendHitDie) break;
+    
+    //                 const hitDieRoll = Math.floor(Math.random() * character.hitDie.faces) + 1;
+    //                 const conModifier = Math.floor((character.abilityScores.constitution - 10) / 2);
+    //                 const hpRegained = hitDieRoll + conModifier;
+    
+    //                 character.hp = Math.min(character.hp + hpRegained, character.maxHp);
+    //                 hitDiceSpent++;
+    //                 character.currentHitDice--;
+    
+    //                 alert(`You regained ${hpRegained} hit points. Current HP: ${character.hp}/${character.maxHp}`);
+    //             }
+    
+    //             updateCharacterSheet();
+    //         });
+    //     } else {
+    //         console.error('Short rest button not found');
+    //     }
+    
+    //     if (longRestButton) {
+    //         longRestButton.addEventListener('click', function() {
+    //             console.log('Long rest button clicked');
+                
+    //             // Restore hit points to maximum
+    //             character.hp = character.maxHp;
+    
+    //             // Restore spell slots
+    //             if (character.spellcasting) {
+    //                 for (let level in character.spellcasting.spellSlots) {
+    //                     character.spellcasting.currentSpellSlots[level] = character.spellcasting.spellSlots[level];
+    //                 }
+    //             }
+    
+    //             // Restore half of max Hit Dice (minimum of 1)
+    //             const hitDiceRestored = Math.max(1, Math.floor(character.level / 2));
+    //             character.currentHitDice = Math.min(character.level, character.currentHitDice + hitDiceRestored);
+    
+    //             updateCharacterSheet();
+    //             alert("You've completed a long rest. Your hit points are restored to maximum, spell slots are refreshed, and you've regained some Hit Dice.");
+    //         });
+    //     } else {
+    //         console.error('Long rest button not found');
+    //     }
+    // });
+
+    shortRestButton.addEventListener('click', function() {
+        // alert('Short rest button clicked');
+        shortRest();
+    });
+    
+    longRestButton.addEventListener('click', function() {
+        // alert('Long rest button clicked');
+        longRest();
+    });
+ 
     function generateRandomCharacter() {
         console.log('Generating random character...');
     
@@ -1042,11 +1232,16 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         const raceTraits = races[randomRace].traits;
         character.race = randomRace;
     
-        // Generate random class
-        const randomClass = getRandomItem(classes);
-        console.log('Selected random class:', randomClass.name);
-        if (classSelect) classSelect.value = randomClass.name;
-        character.class = randomClass.name;
+    // Generate random class
+    const randomClass = getRandomItem(classes);
+    console.log('Selected random class:', randomClass.name);
+    if (classSelect) classSelect.value = randomClass.name;
+    character.class = randomClass.name;
+
+    // Set hit die information
+    character.hitDie.faces = randomClass.hd.faces;
+    character.currentHitDice = character.level;
+
     
         // Generate random name
         character.name = generateRandomName();
@@ -1203,7 +1398,9 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
     }
 
     function saveCharacterToJson() {
-        const characterJson = JSON.stringify(character, null, 2);
+        const characterData = { ...character };
+        characterData.spellcasting.spells = character.spellcasting.spells.map(spell => spell.name);
+        const characterJson = JSON.stringify(characterData, null, 2);
         const blob = new Blob([characterJson], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1215,30 +1412,38 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         URL.revokeObjectURL(url);
     }
     
-    // Load character from JSON file
-    function loadCharacterFromJson() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = (event) => {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const loadedCharacter = JSON.parse(e.target.result);
-                    Object.assign(character, loadedCharacter);
-                    updateCharacterSheet();
-                    showCharacterSheet();
-                    console.log('Character loaded successfully');
-                } catch (error) {
-                    console.error('Error loading character:', error);
-                    alert('Error loading character. Please check the file format.');
+// Load character from JSON file
+function loadCharacterFromJson() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (event) => {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const loadedCharacter = JSON.parse(e.target.result);
+                Object.assign(character, loadedCharacter);
+                
+                // Process spellcasting data
+                if (character.spellcasting && character.spellcasting.spells) {
+                    character.spellcasting.spells = character.spellcasting.spells.map(spellName => 
+                        spells.find(spell => spell.name === spellName)
+                    ).filter(spell => spell !== undefined);
                 }
-            };
-            reader.readAsText(file);
+                
+                updateCharacterSheet();
+                showCharacterSheet();
+                console.log('Character loaded successfully');
+            } catch (error) {
+                console.error('Error loading character:', error);
+                alert('Error loading character. Please check the file format.');
+            }
         };
-        input.click();
-    }
+        reader.readAsText(file);
+    };
+    input.click();
+}
     
     // Event listeners for save and load buttons
     document.getElementById('saveCharacterJson').addEventListener('click', saveCharacterToJson);
@@ -1256,41 +1461,67 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
             return element;
         };
     
-        switch (field) {
-            case 'name':
-                const nameInput = getElement('name');
-                if (nameInput) {
+        // switch (field) {
+            // case 'name':
+            //     const nameInput = getElement('name');
+            //     if (nameInput) {
+            //         character.name = nameInput.value;
+            //     }
+            //     break;
+    
+            // case 'race':
+            //     character.race = raceSelect.value;
+            //     // Append racial abilities/traits to notes if they aren't dedicated fields
+            //     const raceTraits = races[character.race]?.traits || {};
+            //     character.notes += `Racial Traits for ${character.race}: ${JSON.stringify(raceTraits)}\n`;
+            //     break;
+    
+            // case 'class':
+            //     character.class = classSelect.value;
+            //     // Optionally add class features to notes if not handled elsewhere
+            //     const classFeatures = classes[character.class]?.features || {};
+            //     character.notes += `Class Features for ${character.class}: ${JSON.stringify(classFeatures)}\n`;
+            //     break;
+    
+            // case 'subclass':
+            //     character.subclass = subclassSelect.value;
+            //     // Optionally add subclass features to notes
+            //     const subclassFeatures = classes[character.class]?.subclasses[character.subclass]?.features || {};
+            //     character.notes += `Subclass Features for ${character.subclass}: ${JSON.stringify(subclassFeatures)}\n`;
+            //     break;
+    
+            // case 'level':
+            //     const levelInput = getElement('level');
+            //     if (levelInput) {
+            //         character.level = parseInt(levelInput.value) || 1;
+            //     }
+            //     break;
+
+            switch (field) {
+                case 'name':
                     character.name = nameInput.value;
-                }
-                break;
-    
-            case 'race':
-                character.race = raceSelect.value;
-                // Append racial abilities/traits to notes if they aren't dedicated fields
-                const raceTraits = races[character.race]?.traits || {};
-                character.notes += `Racial Traits for ${character.race}: ${JSON.stringify(raceTraits)}\n`;
-                break;
-    
-            case 'class':
-                character.class = classSelect.value;
-                // Optionally add class features to notes if not handled elsewhere
-                const classFeatures = classes[character.class]?.features || {};
-                character.notes += `Class Features for ${character.class}: ${JSON.stringify(classFeatures)}\n`;
-                break;
-    
-            case 'subclass':
-                character.subclass = subclassSelect.value;
-                // Optionally add subclass features to notes
-                const subclassFeatures = classes[character.class]?.subclasses[character.subclass]?.features || {};
-                character.notes += `Subclass Features for ${character.subclass}: ${JSON.stringify(subclassFeatures)}\n`;
-                break;
-    
-            case 'level':
-                const levelInput = getElement('level');
-                if (levelInput) {
+                    break;
+                case 'race':
+                    character.race = raceSelect.value;
+                    updateRaceTraits();
+                    break;
+                case 'class':
+                    character.class = classSelect.value;
+                    updateClassFeatures();
+                    updateSubclassSelect();
+                    break;
+                    case 'subclass':
+                        if (subclassSelect.selectedIndex > 0) {
+                            character.subclass = subclassSelect.options[subclassSelect.selectedIndex].value;
+                        } else {
+                            character.subclass = '';
+                        }
+                        break;
+                case 'level':
                     character.level = parseInt(levelInput.value) || 1;
-                }
-                break;
+                    updateSubclassSelect();
+                    updateClassFeatures();
+                    break;
     
             case 'hp':
                 const hpInput = getElement('hp');
@@ -1356,7 +1587,284 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
     }
     
 
+    function calculateSpellSlots(characterClass, level) {
+        const fullCasters = ['wizard', 'sorcerer', 'bard', 'cleric', 'druid'];
+        const halfCasters = ['paladin', 'ranger'];
+        const artificer = 'artificer';
+        const warlock = 'warlock';
+
+        let slots = {
+            1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+        };
+
+        if (fullCasters.includes(characterClass)) {
+            const effectiveLevel = level;
+            if (effectiveLevel >= 1) slots[1] = effectiveLevel >= 1 ? 2 : 0;
+            if (effectiveLevel >= 2) slots[1] = 3;
+            if (effectiveLevel >= 3) { slots[1] = 4; slots[2] = 2; }
+            if (effectiveLevel >= 4) slots[2] = 3;
+            if (effectiveLevel >= 5) { slots[1] = 4; slots[2] = 3; slots[3] = 2; }
+            if (effectiveLevel >= 6) slots[3] = 3;
+            if (effectiveLevel >= 7) { slots[4] = 1; }
+            if (effectiveLevel >= 8) slots[4] = 2;
+            if (effectiveLevel >= 9) { slots[4] = 3; slots[5] = 1; }
+            if (effectiveLevel >= 10) slots[5] = 2;
+            if (effectiveLevel >= 11) slots[6] = 1;
+            if (effectiveLevel >= 13) slots[7] = 1;
+            if (effectiveLevel >= 15) slots[8] = 1;
+            if (effectiveLevel >= 17) slots[9] = 1;
+            if (effectiveLevel >= 18) slots[5] = 3;
+            if (effectiveLevel >= 19) slots[6] = 2;
+            if (effectiveLevel >= 20) slots[7] = 2;
+        } else if (halfCasters.includes(characterClass)) {
+            const effectiveLevel = Math.ceil(level / 2);
+            if (effectiveLevel >= 2) slots[1] = 2;
+            if (effectiveLevel >= 3) slots[1] = 3;
+            if (effectiveLevel >= 5) { slots[1] = 4; slots[2] = 2; }
+            if (effectiveLevel >= 7) slots[2] = 3;
+            if (effectiveLevel >= 9) { slots[3] = 2; }
+            if (effectiveLevel >= 11) slots[3] = 3;
+            if (effectiveLevel >= 13) slots[4] = 1;
+            if (effectiveLevel >= 15) slots[4] = 2;
+            if (effectiveLevel >= 17) { slots[4] = 3; slots[5] = 1; }
+            if (effectiveLevel >= 19) slots[5] = 2;
+        } else if (characterClass === artificer) {
+            const effectiveLevel = Math.ceil(level / 2);
+            if (effectiveLevel >= 1) slots[1] = 2;
+            if (effectiveLevel >= 2) slots[1] = 2;
+            if (effectiveLevel >= 3) { slots[1] = 3; slots[2] = 2; }
+            if (effectiveLevel >= 4) slots[2] = 2;
+            if (effectiveLevel >= 5) { slots[1] = 4; slots[2] = 3; slots[3] = 2; }
+            if (effectiveLevel >= 7) slots[3] = 3;
+            if (effectiveLevel >= 9) { slots[3] = 3; slots[4] = 1; }
+            if (effectiveLevel >= 11) slots[4] = 2;
+            if (effectiveLevel >= 13) slots[4] = 3;
+            if (effectiveLevel >= 15) slots[5] = 1;
+            if (effectiveLevel >= 17) slots[5] = 2;
+            if (effectiveLevel >= 19) slots[5] = 2;
+        } else if (characterClass === warlock) {
+            const pactMagicSlots = Math.min(Math.floor((level + 1) / 2), 4);
+            const pactMagicLevel = Math.min(Math.floor((level - 1) / 6) + 1, 5);
+            for (let i = 1; i <= pactMagicLevel; i++) {
+                slots[i] = pactMagicSlots;
+            }
+        }
+
+        return slots;
+    }
+
+    function initializeSpellcasting() {
+        if (!character.spellcasting) {
+            character.spellcasting = {
+                class: character.class || '',
+                ability: '',  // This should be set based on the class
+                spellSaveDC: 0,
+                spellAttackBonus: 0,
+                spells: [],
+                spellSlots: calculateSpellSlots(character.class.toLowerCase(), character.level),
+                currentSpellSlots: {}
+            };
+        }
+        // Initialize or reset current spell slots
+        for (let i = 1; i <= 9; i++) {
+            character.spellcasting.currentSpellSlots[i] = character.spellcasting.spellSlots[i] || 0;
+        }
+    }
+    
+    // Function to update spellcasting UI
+    function updateSpellcastingUI() {
+        initializeSpellcasting();
+        
+        const spellSlotsDiv = document.getElementById('spellSlots');
+        if (!spellSlotsDiv) {
+            console.error('Spell slots div not found');
+            return;
+        }
+    
+        // Clear existing content
+        spellSlotsDiv.innerHTML = '<h4>Spell Slots:</h4>';
+    
+        // Create spell slot row if it doesn't exist
+        let spellSlotRow = spellSlotsDiv.querySelector('.spell-slot-row');
+        if (!spellSlotRow) {
+            spellSlotRow = document.createElement('div');
+            spellSlotRow.classList.add('spell-slot-row');
+            spellSlotsDiv.appendChild(spellSlotRow);
+        }
+        
+        spellSlotRow.innerHTML = ''; // Clear existing spell slots
+        
+        for (let i = 1; i <= 9; i++) {
+            if (character.spellcasting.spellSlots[i] > 0) {
+                const slotDiv = document.createElement('div');
+                slotDiv.classList.add('spell-slot');
+                slotDiv.innerHTML = `
+                    <span>${i}:</span>
+                    <button class="spell-slot-button" data-level="${i}">
+                        ${character.spellcasting.currentSpellSlots[i]}/${character.spellcasting.spellSlots[i]}
+                    </button>
+                `;
+                spellSlotRow.appendChild(slotDiv);
+            }
+        }
+    
+        // Populate spell dropdown
+        const spellSelect = document.getElementById('spellSelect');
+        if (spellSelect) {
+            spellSelect.innerHTML = '<option value="">Select a spell</option>';
+            spells.filter(spell => spell.classes.includes(character.class))
+                .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name))
+                .forEach(spell => {
+                    const option = document.createElement('option');
+                    option.value = spell.name;
+                    option.textContent = `${spell.name} (Level ${spell.level})`;
+                    spellSelect.appendChild(option);
+                });
+        }
+    
+        updateSpellList();
+    }
+    
+    function scrollToSpellLevel(level) {
+        const spellLevelHeader = document.querySelector(`#spellList h4:nth-of-type(${parseInt(level)})`);
+        if (spellLevelHeader) {
+            spellLevelHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    
+    // Function to update spell list
+    function updateSpellList() {
+        const spellListDiv = document.getElementById('spellList');
+        spellListDiv.innerHTML = '';
+        spellLevels.forEach((level, index) => {
+            const levelDiv = document.createElement('div');
+            levelDiv.innerHTML = `<h4 id="spellLevel${index}">${level}</h4>`;
+            const levelSpells = character.spellcasting.spells.filter(spell => 
+                (level === 'Cantrips' && spell.level === 0) || 
+                (level !== 'Cantrips' && spell.level === spellLevels.indexOf(level))
+            );
+            levelSpells.forEach(spell => {
+                const spellButton = document.createElement('button');
+                spellButton.classList.add('spell-chevron');
+                spellButton.innerHTML = `
+                    ${spell.name}
+                    <div class="spell-details hidden">
+                        <p>Level: ${spell.level}</p>
+                        <p>${spell.description}</p>
+                    </div>
+                `;
+                spellButton.addEventListener('click', () => toggleSpellDetails(spellButton));
+                
+                const castButton = document.createElement('button');
+                castButton.textContent = 'Cast';
+                castButton.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent triggering the spell details toggle
+                    castSpell(spell);
+                });
+                
+                const spellContainer = document.createElement('div');
+                spellContainer.classList.add('spell-container');
+                spellContainer.appendChild(spellButton);
+                spellContainer.appendChild(castButton);
+                
+                levelDiv.appendChild(spellContainer);
+            });
+            spellListDiv.appendChild(levelDiv);
+        });
+    }
+    
+    // Function to toggle spell details
+    function toggleSpellDetails(button) {
+        const details = button.querySelector('.spell-details');
+        details.classList.toggle('hidden');
+    }
+    
+    // Function to cast a spell
+    function castSpell(spell) {
+        if (spell.level === 0) {
+            console.log("Casting cantrip, no spell slot used.");
+            return; // Cantrips don't use spell slots
+        }
+    
+        let slotToUse = spell.level;
+        const isWarlock = character.class.toLowerCase() === 'warlock';
+    
+        if (isWarlock) {
+            // For Warlocks, find the lowest level available slot
+            for (let i = spell.level; i <= 5; i++) {
+                if (character.spellcasting.currentSpellSlots[i] > 0) {
+                    slotToUse = i;
+                    break;
+                }
+            }
+        }
+    
+        if (character.spellcasting.currentSpellSlots[slotToUse] > 0) {
+            character.spellcasting.currentSpellSlots[slotToUse]--;
+            console.log(`Cast ${spell.name} using level ${slotToUse} slot. Remaining slots: ${character.spellcasting.currentSpellSlots[slotToUse]}`);
+            updateSpellSlotDisplay(); // Add this line to update the display
+        } else {
+            console.log(`No spell slots available for ${spell.name} (level ${spell.level})`);
+            alert('No spell slots available for this spell!');
+        }
+    }
+
+    function updateSpellSlotDisplay() {
+        const spellSlotRow = document.querySelector('.spell-slot-row');
+        if (!spellSlotRow) return;
+    
+        for (let i = 1; i <= 9; i++) {
+            const slotSpan = document.getElementById(`spellSlot${i}`);
+            if (slotSpan) {
+                const maxSlots = character.spellcasting.spellSlots[i] || 0;
+                const currentSlots = character.spellcasting.currentSpellSlots[i] || 0;
+                slotSpan.textContent = `${currentSlots}/${maxSlots}`;
+            }
+        }
+    }
+    
+    // Function to add a spell to the character's spell list
+    function addSpellToCharacter() {
+        const spellName = document.getElementById('spellSelect').value;
+        const spell = spells.find(s => s.name === spellName);
+        if (spell && !character.spellcasting.spells.some(s => s.name === spell.name)) {
+            character.spellcasting.spells.push(spell);
+            updateSpellList();
+        }
+    }
+
+    modifyHPButton.addEventListener('click', () => {
+        hpModal.style.display = 'block';
+    });
+    
+    closeModal.addEventListener('click', () => {
+        hpModal.style.display = 'none';
+    });
+    
+    healButton.addEventListener('click', () => {
+        const amount = parseInt(hpChangeAmount.value) || 0;
+        character.hp = Math.min(character.hp + amount, character.maxHp);
+        updateHPDisplay();
+        hpModal.style.display = 'none';
+    });
+    
+    damageButton.addEventListener('click', () => {
+        const amount = parseInt(hpChangeAmount.value) || 0;
+        character.hp = Math.max(character.hp - amount, 0);
+        updateHPDisplay();
+        hpModal.style.display = 'none';
+    });
+    
+    // Event listener for adding spells
+    document.getElementById('addSpell').addEventListener('click', addSpellToCharacter);
+
     characterNotes.addEventListener('input', saveCharacterNotes);
+
+    nameInput.addEventListener('input', () => updateCharInfo('name'));
+raceSelect.addEventListener('change', () => updateCharInfo('race'));
+classSelect.addEventListener('change', () => updateCharInfo('class'));
+subclassSelect.addEventListener('change', () => updateCharInfo('subclass'));
+levelInput.addEventListener('input', () => updateCharInfo('level'));
 
     saveCharacterJson.addEventListener('click', () => {
         // Implement JSON saving logic here
@@ -1395,15 +1903,6 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         saveThemePreference(currentColor, isDark);
     });
 
-    themeColorEmbed.addEventListener('change', (e) => {
-        const newColor = e.target.value;
-        applyTheme(newColor, themeModeEmbed.checked);
-    });
-
-    themeModeEmbed.addEventListener('change', (e) => {
-        const isDark = e.target.checked;
-        applyTheme(themeColorEmbed.value, isDark);
-    });
 
     // Event Listeners
     document.body.addEventListener('click', (e) => {
@@ -1442,8 +1941,11 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
     });
 
     subclassSelect.addEventListener('change', () => {
+        updateCharInfo('subclass');
+        console.log('Subclass updated:', character.subclass);  // Add this line for debugging
         if (levelInput.value < 3) {
             levelInput.value = 3;
+            updateCharInfo('level');
         }
     });
 
@@ -1481,24 +1983,70 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
 
     // saveCharacterButton.addEventListener('click', showCharacterSheet);
 
+    // saveCharacterButton.addEventListener('click', (e) => {
+    //     e.preventDefault();
+    //     console.log('Save character button clicked');
+        
+    //     try {
+    //         // Basic character information is already stored in the character object
+    //         // throughout the character creation process, so we don't need to update it here
+    
+    //         // However, we might want to recalculate or update certain derived values
+    //         character.proficiencyBonus = Math.ceil(1 + (character.level / 4));
+    
+    //         // Calculate HP if it hasn't been manually set
+    //         if (!character.hp) {
+    //             const conModifier = Math.floor((character.abilityScores.constitution - 10) / 2);
+    //             const hitDice = getHitDiceByClass(character.class);
+    //             character.hp = (hitDice + conModifier) + ((character.level - 1) * (Math.floor(hitDice / 2) + 1 + conModifier));
+    //         }
+    
+    //         console.log('Character saved:', character);
+    //         updateCharacterSheet();
+    //         showCharacterSheet();
+    //     } catch (error) {
+    //         console.error('Error saving character:', error);
+    //         console.error('Error details:', error.stack);
+    //     }
+    // });
+
     saveCharacterButton.addEventListener('click', (e) => {
         e.preventDefault();
         console.log('Save character button clicked');
         
         try {
-            // Basic character information is already stored in the character object
-            // throughout the character creation process, so we don't need to update it here
-    
-            // However, we might want to recalculate or update certain derived values
+            // Update all character information
+            updateCharInfo('name');
+            updateCharInfo('race');
+            updateCharInfo('class');
+            updateCharInfo('subclass');  // Add this line
+            updateCharInfo('level');
+
+            // Ensure subclass is set if a valid option is selected
+            if (subclassSelect.selectedIndex > 0) {
+                character.subclass = subclassSelect.options[subclassSelect.selectedIndex].value;
+            } else {
+                character.subclass = '';
+            }
+            
+            // Update ability scores
+            abilityScores.forEach(ability => {
+                const abilityButton = document.querySelector(`[data-ability="${ability.toLowerCase()}"]`);
+                if (abilityButton) {
+                    character.abilityScores[ability.toLowerCase()] = parseInt(abilityButton.dataset.value) || 10;
+                }
+            });
+            
+            // Calculate derived values
             character.proficiencyBonus = Math.ceil(1 + (character.level / 4));
-    
+            
             // Calculate HP if it hasn't been manually set
             if (!character.hp) {
                 const conModifier = Math.floor((character.abilityScores.constitution - 10) / 2);
                 const hitDice = getHitDiceByClass(character.class);
                 character.hp = (hitDice + conModifier) + ((character.level - 1) * (Math.floor(hitDice / 2) + 1 + conModifier));
             }
-    
+            
             console.log('Character saved:', character);
             updateCharacterSheet();
             showCharacterSheet();
@@ -1563,17 +2111,49 @@ prevSectionButton.addEventListener('click', () => navigateSection(-1));
         updateSkillModifiers();
         adjustContentPadding();
         initializeRandomCharacterButton();
-        loadInventoryData(); // Add this line to load inventory data
+        loadInventoryData(); // This line loads inventory data
+        // Remove the loadSpells() call if it's here
     }
+
+    // Promise.all([
+    //     fetch('races.json').then(response => response.json()),
+    //     fetch('classes.json').then(response => response.json())
+    // ]).then(([racesData, classesData]) => {
+    //     races = sortRacesAlphabetically(racesData);
+    //     classes = classesData;
+    //     populateRaceSelect();
+    //     populateClassSelect();
+    //     init(); // Call init() here
+    // }).catch(error => console.error('Error loading data:', error));
 
     Promise.all([
         fetch('races.json').then(response => response.json()),
-        fetch('classes.json').then(response => response.json())
-    ]).then(([racesData, classesData]) => {
+        fetch('classes.json').then(response => response.json()),
+        fetch('spells.json').then(response => response.json()),
+        fetch('weapons.json').then(response => response.json()),
+        fetch('armor.json').then(response => response.json()),
+        fetch('items.json').then(response => response.json())
+    ]).then(([racesData, classesData, spellsData, weaponsData, armorsData, itemsData]) => {
         races = sortRacesAlphabetically(racesData);
         classes = classesData;
+        spells = spellsData;
+        weapons = weaponsData;
+        armors = armorsData;
+        items = itemsData;
+
+// Store hit die information for each class
+classes.forEach(classData => {
+    classData.hitDie = {
+        number: classData.hd.number,
+        faces: classData.hd.faces
+    };
+});
+
         populateRaceSelect();
         populateClassSelect();
+        populateDropdowns();
+        initializeSpellcasting();
+        updateSpellcastingUI();
         init(); // Call init() here
     }).catch(error => console.error('Error loading data:', error));
 });
