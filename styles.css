@@ -823,3 +823,237 @@ body.dark-mode .roll-button:hover {
     border-radius: var(--border-radius);
     cursor: pointer;
 }
+
+#restButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#restButton:hover {
+    background-color: var(--hover-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#restButton:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#restModal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+#restModal .modal-content {
+    background-color: var(--background-color);
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid var(--accent-color);
+    width: 300px;
+    text-align: center;
+}
+
+#restModal h2 {
+    margin-top: 0;
+}
+
+#restModal button {
+    margin: 10px;
+    padding: 10px 20px;
+}
+
+/* Add these styles to your existing CSS file */
+
+#combatSection {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--card-shadow);
+}
+
+#weaponsContainer, #combatSpellsContainer {
+    margin-bottom: 20px;
+}
+
+#weaponsList, #combatSpellsList {
+    list-style-type: none;
+    padding: 0;
+}
+
+.weapon-item, .spell-item {
+    background-color: var(--secondary-color);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.weapon-name, .spell-name {
+    font-weight: bold;
+    flex-grow: 1;
+}
+
+.roll-to-hit, .roll-damage, .cast-spell {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+    border: none;
+    padding: 5px 10px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-left: 5px;
+    transition: background-color 0.3s;
+}
+
+.roll-to-hit:hover, .roll-damage:hover, .cast-spell:hover {
+    background-color: var(--accent-hover-light);
+}
+
+body.dark-mode .roll-to-hit:hover, 
+body.dark-mode .roll-damage:hover, 
+body.dark-mode .cast-spell:hover {
+    background-color: var(--accent-hover-dark);
+}
+
+.spell-item details {
+    margin-top: 10px;
+}
+
+.spell-item summary {
+    cursor: pointer;
+    outline: none;
+}
+
+.spell-item p {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: var(--text-color);
+}
+
+.weapon-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.weapon-info {
+    flex-grow: 1;
+}
+
+.weapon-name {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.weapon-damage {
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.weapon-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.spell-slot-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.spell-slot {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+    padding: 5px 10px;
+    border-radius: var(--border-radius);
+}
+
+#spellList h4 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+#spellList .spell-item {
+    margin-bottom: 10px;
+}
+
+.spell-level {
+    font-weight: bold;
+    color: var(--accent-color);
+    margin-right: 5px;
+}
+
+.spell-item summary {
+    display: flex;
+    align-items: center;
+}
+
+.spell-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.spell-item summary::before {
+    content: '▶';
+    margin-right: 5px;
+    transition: transform 0.3s;
+}
+
+.spell-item details[open] summary::before {
+    transform: rotate(90deg);
+}
+.roll-history {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+.roll-history h4 {
+    margin-bottom: 10px;
+}
+
+.roll-history div {
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+.remove-item {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+    border: none;
+    padding: 5px 10px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.remove-item:hover {
+    background-color: var(--accent-hover-light);
+}
+
+body.dark-mode .remove-item:hover {
+    background-color: var(--accent-hover-dark);
+}

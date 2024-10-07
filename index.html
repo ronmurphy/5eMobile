@@ -23,8 +23,13 @@
             </div>
         </div>
 
-        <div id="characterCreator" class="hidden">
+        <div id="none"class="hidden" >
+            <p>None</p>
+        </div>
+
+        <div id="characterCreator"class="hidden" >
             <form id="characterForm">
+                <!-- Basic Information Card -->
                 <div class="card">
                     <h2>Basic Information</h2>
                     <div class="form-group">
@@ -36,14 +41,12 @@
                         <label for="race">Race:</label>
                         <select id="race" name="race" required>
                             <option value="">Select a race</option>
-                            <!-- Races will be populated dynamically -->
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="class">Class:</label>
                         <select id="class" name="class" required>
                             <option value="">Select a class</option>
-                            <!-- Classes will be populated dynamically -->
                         </select>
                     </div>
                     <div class="form-group">
@@ -54,42 +57,39 @@
                         <label for="subclass">Subclass:</label>
                         <select id="subclass" name="subclass" disabled>
                             <option value="">Select a subclass</option>
-                            <!-- Subclasses will be populated dynamically -->
                         </select>
                     </div>
                     <div class="navigation-buttons">
-                        <button class="prev-button hidden">Previous</button>
-                        <button class="next-button">Next</button>
+                        <button type="button" class="prev-button hidden">Previous</button>
+                        <button type="button" class="next-button">Next</button>
                     </div>
                 </div>
-
+        
+                <!-- Ability Scores Card -->
                 <div class="card hidden">
                     <h2>Ability Scores</h2>
-                    <div class="ability-scores">
-                        <div class="ability-column">
-                            <!-- First column of abilities will be dynamically populated -->
-                        </div>
-                        <div class="ability-column">
-                            <!-- Second column of abilities will be dynamically populated -->
-                        </div>
+                    <div class="ability-columns">
+                        <!-- Ability scores will be dynamically added here -->
                     </div>
                     <div class="navigation-buttons">
-                        <button class="prev-button">Previous</button>
-                        <button class="next-button">Next</button>
+                        <button type="button" class="prev-button">Previous</button>
+                        <button type="button" class="next-button">Next</button>
                     </div>
                 </div>
-
+        
+                <!-- Skills Card -->
                 <div class="card hidden">
                     <h2>Skills</h2>
                     <div id="skillList">
-                        <!-- Skills will be dynamically populated here -->
+                        <!-- Skills will be dynamically added here -->
                     </div>
                     <div class="navigation-buttons">
-                        <button class="prev-button">Previous</button>
-                        <button class="next-button">Next</button>
+                        <button type="button" class="prev-button">Previous</button>
+                        <button type="button" class="next-button">Next</button>
                     </div>
                 </div>
-
+        
+                <!-- Review and Save Card -->
                 <div class="card hidden">
                     <h2>Review and Save</h2>
                     <p>Review your character details here.</p>
@@ -102,7 +102,7 @@
                         <ul id="classFeaturesList"></ul>
                     </div>
                     <div class="navigation-buttons">
-                        <button class="prev-button">Previous</button>
+                        <button type="button" class="prev-button">Previous</button>
                         <button type="button" id="saveCharacterButton">Save Character</button>
                     </div>
                 </div>
@@ -116,23 +116,10 @@
                         <h1 id="sheetCharacterName"></h1>
                         <p id="sheetRaceClass"></p>
                     </div>
-                    <div class="rest-buttons">
-                        <button id="shortRestButton">Short Rest</button>
-                        <button id="longRestButton">Long Rest</button>
-                    </div>
                     <div class="character-stats">
                         <div class="stat-box">
                             <label>HP: <span id="sheetHP"></span></label>
                             <button id="modifyHPButton">Modify HP</button>
-                        </div>
-                        <div id="hpModal" class="modal">
-                            <div class="modal-content">
-                                <h2>Modify HP</h2>
-                                <input type="number" id="hpChangeAmount" placeholder="Enter amount">
-                                <button id="healButton">Heal</button>
-                                <button id="damageButton">Damage</button>
-                                <button id="closeModal">Close</button>
-                            </div>
                         </div>
                         <div class="stat-box">
                             <label>AC</label>
@@ -142,6 +129,7 @@
                             <label>Initiative</label>
                             <button id="rollInitiativeButton"></button>
                         </div>
+                        <button id="restButton" class="stat-box">Rest</button>
                     </div>
                 </div>
                 <div class="sheet-navigation">
@@ -189,7 +177,9 @@
                 <div id="spellcastingSection" class="sheet-section hidden">
                     <h3>Spellcasting</h3>
                     <div id="spellSlots">
-                        <!-- Spell slots will be dynamically added here -->
+                        <h4>Spell Slots:</h4>
+                        <div class="spell-slot-row"></div>
+                        <div id="spellSlots"></div>
                     </div>
                     <div id="spellManagement">
                         <select id="spellSelect"></select>
@@ -199,22 +189,41 @@
                         <!-- Spell list categories will be dynamically added here -->
                     </div>
                 </div>
+                <div id="combatSection" class="sheet-section hidden">
+                    <h3>Combat</h3>
+                    <div class="combat-content">
+                        <div id="weaponsContainer">
+                            <h4>Weapons</h4>
+                            <ul id="weaponsList"></ul>
+                        </div>
+                        <div id="combatSpellsContainer">
+                            <h4>Combat Spells</h4>
+                            <div id="combatSpellSlots"></div>
+                            <ul id="combatSpellsList"></ul>
+                        </div>
+                    </div>
+                </div>
                 <div id="optionsSection" class="sheet-section hidden">
                     <h3>Options</h3>
                     <div class="options-content">
-                    <div class="form-group">
-                        <label for="characterNotes">Character Notes:</label>
-                        <textarea id="characterNotes" rows="5"></textarea>
-                    </div>
-                    <div id="featuresSection" class="sheet-section hidden">
-                        <h3>Features and Traits</h3>
-                        <ul id="featuresList"></ul>
-                    </div>
-                    <div class="options-buttons">
-                        <button id="saveCharacterJson">Save to JSON</button>
-                        <button id="loadCharacterJson">Load from JSON</button>
-                        <button id="returnToCreator">Return to Creator</button>
-                        <button id="levelUp">Level Up (+1)</button>
+                        `<div id="rollHistory" class="roll-history">
+                            <h4>Recent Rolls</h4>
+                            <!-- Roll history will be populated here -->
+                        </div>`
+                        <div class="form-group">
+                            <label for="characterNotes">Character Notes:</label>
+                            <textarea id="characterNotes" rows="5"></textarea>
+                        </div>
+                        <div id="featuresSection">
+                            <h3>Features and Traits</h3>
+                            <ul id="featuresList"></ul>
+                        </div>
+                        <div class="options-buttons">
+                            <button id="saveCharacterJson">Save to JSON</button>
+                            <button id="loadCharacterJson">Load from JSON</button>
+                            <button id="returnToCreator">Return to Creator</button>
+                            <button id="levelUp">Level Up (+1)</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -239,6 +248,26 @@
                 Dark Mode
                 <input type="checkbox" id="themeMode">
             </label>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="hpModal" class="modal">
+        <div class="modal-content">
+            <h2>Modify HP</h2>
+            <input type="number" id="hpChangeAmount" placeholder="Enter amount">
+            <button id="healButton">Heal</button>
+            <button id="damageButton">Damage</button>
+            <button id="closeModal">Close</button>
+        </div>
+    </div>
+
+    <div id="restModal" class="modal">
+        <div class="modal-content">
+            <h2>Choose Rest Type</h2>
+            <button id="shortRestButton" class="themed-button">Short Rest</button>
+            <button id="longRestButton" class="themed-button">Long Rest</button>
+            <button id="closeRestModal" class="themed-button">Close</button>
         </div>
     </div>
 
