@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Card</title>
+    <style>
+        :root {
+            --primary-color: #4a4a4a;
+            --secondary-color: #f0f0f0;
+            --accent-color: #007bff;
+            --text-color: #333;
+            --background-color: #ffffff;
+            --card-background: #ffffff;
+            --border-color: #ddd;
+            --border-radius: 8px;
+            --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            padding: 20px;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            text-align: left;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card-background);
+            background-image: url("tri.jpeg");
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .character-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .character-info {
+            text-align: left;
+        }
+
+        .character-info h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .character-info p {
+            margin: 5px 0 0;
+            font-size: 1em;
+            color: var(--primary-color);
+        }
+
+        .ability-scores-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .attribute-column {
+            flex: 1;
+            max-width: calc(100% / 6 - 10px);
+            text-align: center;
+            margin: 5px;
+        }
+
+        .attribute-box {
+            padding: 10px;
+            background-color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            margin: 0;
+        }
+
+        .attribute-name, .attribute-score, .attribute-modifier {
+            margin-bottom: 5px;
+        }
+
+        .sheet-navigation {
+            display: flex;
+            flex-direction: column;
+            margin-left: 20px;
+        }
+
+        .link-btn {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 4px;
+            margin-bottom: 4px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            width: 80px;
+        }
+
+        .sheet-section {
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .character-header {
+                flex-direction: column;
+            }
+
+            .sheet-navigation {
+                flex-direction: row;
+                justify-content: space-around;
+                width: 100%;
+            }
+
+            .link-btn {
+                margin-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Character Viewer</h1>
+        <input type="file" id="fileInput" accept=".json">
+        <div id="cardContainer"></div>
+    </div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const characterData = JSON.parse(e.target.result);
+                    renderCharacterCard(characterData);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function renderCharacterCard(character) {
+            const container = document.getElementById('cardContainer');
+            container.innerHTML = ''; // Clear previous content
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const header = document.createElement('div');
+            header.className = 'character-header';
+            header.innerHTML = `
+                <div class="character-info">
+                    <h1>${character.name}</h1>
+                    <p>${character.race} | Level ${character.level} | ${character.class} (${character.subclass})</p>
+                </div>
+                <div class="sheet-navigation">
+                    <button class="link-btn" onclick="showSection('skills')">Skills</button>
+                    <button class="link-btn" onclick="showSection('spells')">Spells</button>
+                    <button class="link-btn" onclick="showSection('inventory')">Inventory</button>
+                </div>
+            `;
+            
+            const abilityScoresRow = document.createElement('div');
+            abilityScoresRow.className = 'ability-scores-row';
+            
+            const abilityNames = {
+    strength: 'Str',
+    dexterity: 'Dex',
+    constitution: 'Con',
+    intelligence: 'Int',
+    wisdom: 'Wis',
+    charisma: 'Cha'
+};
+
+const abilityScores = Object.keys(character.abilityScores).map(attr => {
+    const modifier = Math.floor((character.abilityScores[attr] - 10) / 2);
+    const displayAttr = abilityNames[attr.toLowerCase()] || attr; // Abbreviate name
+
+                return `
+                    <div class="attribute-column">
+                        <div class="attribute-box">
+                            <div class="attribute-name">${displayAttr}</div>
+                            <div class="attribute-score">${character.abilityScores[attr]}</div>
+                            <div class="attribute-modifier">${modifier >= 0 ? '+' + modifier : modifier}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            abilityScoresRow.innerHTML = abilityScores;
+
+            const contentSections = document.createElement('div');
+contentSections.innerHTML = `
+    <div id="skills" class="sheet-section hidden">
+        <h3>Skills</h3>
+        <ul>${Object.keys(character.skills).map(skill => `<li>${skill}</li>`).join('')}</ul>
+    </div>
+    <div id="spells" class="sheet-section hidden">
+        <h3>Spells</h3>
+        <ul>${character.spells.length ? character.spells.map(spell => `<li>${spell}</li>`).join('') : '<li>No spells</li>'}</ul>
+    </div>
+    <div id="inventory" class="sheet-section hidden">
+        <h3>Inventory</h3>
+        <ul>${character.inventory.length ? character.inventory.map(item => `<li>${item.name}</li>`).join('') : '<li>No items</li>'}</ul>
+    </div>
+`;
+
+
+
+            card.appendChild(header);
+            card.appendChild(abilityScoresRow);
+            card.appendChild(contentSections);
+
+            container.appendChild(card);
+        }
+
+        function showSection(sectionId) {
+            console.log('showing section');
+            console.log(sectionId);
+    document.querySelectorAll('.sheet-section').forEach(section => {
+        section.classList.add('hidden');
+    });
+    const section = document.getElementById(sectionId);
+    if (section) {
+        section.classList.remove('hidden');
+    }
+}
+
+
+    </script>
+</body>
+</html>
