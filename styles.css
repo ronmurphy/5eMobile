@@ -1057,3 +1057,28 @@ body.dark-mode .cast-spell:hover {
 body.dark-mode .remove-item:hover {
     background-color: var(--accent-hover-dark);
 }
+
+#abilityScoreModal .modal-content {
+    text-align: center;
+}
+
+#abilityScoreModal .button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Adjust this value to increase or decrease space between buttons */
+    margin-top: 20px; /* Adds some space between the title and buttons */
+}
+
+#abilityScoreModal .themed-button {
+    flex: 1; /* This makes the buttons take up equal width */
+    max-width: 150px; /* Adjust this value as needed to limit button width */
+}
+@media (max-width: 300px) {
+    #abilityScoreModal .button-container {
+        flex-direction: column;
+    }
+
+    #abilityScoreModal .themed-button {
+        max-width: none;
+    }
+}

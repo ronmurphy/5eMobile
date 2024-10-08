@@ -290,6 +290,44 @@
         </div>
     </div>
 
+    <div id="abilityScoreModal" class="modal">
+        <div class="modal-content">
+            <h2>Choose Ability Score Method</h2>
+            <button id="randomAbilityScores" class="themed-button">Roll Dice</button>
+            <button id="manualAbilityScores" class="themed-button">You Assign</button>
+        </div>
+    </div>
+    
+    <div id="manualInputCard" class="card hidden">
+        <h2>Manual Ability Score Input</h2>
+        <div class="ability-input-grid">
+            <div class="ability-input">
+                <label for="strengthInput">Strength</label>
+                <input type="number" id="strengthInput" min="3" max="18">
+            </div>
+            <div class="ability-input">
+                <label for="dexterityInput">Dexterity</label>
+                <input type="number" id="dexterityInput" min="3" max="18">
+            </div>
+            <div class="ability-input">
+                <label for="constitutionInput">Constitution</label>
+                <input type="number" id="constitutionInput" min="3" max="18">
+            </div>
+            <div class="ability-input">
+                <label for="intelligenceInput">Intelligence</label>
+                <input type="number" id="intelligenceInput" min="3" max="18">
+            </div>
+            <div class="ability-input">
+                <label for="wisdomInput">Wisdom</label>
+                <input type="number" id="wisdomInput" min="3" max="18">
+            </div>
+            <div class="ability-input">
+                <label for="charismaInput">Charisma</label>
+                <input type="number" id="charismaInput" min="3" max="18">
+            </div>
+        </div>
+        <button id="finishAssigning" class="themed-button">Finish Assigning</button>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>

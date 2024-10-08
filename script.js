@@ -393,6 +393,59 @@ function updateAbilityModifier(ability) {
     }
 }
 
+function showAbilityScoreModal() {
+    const modal = document.getElementById('abilityScoreModal');
+    modal.style.display = 'block';
+
+    document.getElementById('randomAbilityScores').addEventListener('click', () => {
+        modal.style.display = 'none';
+        // The random generation card is already visible, so we don't need to do anything else
+    });
+
+    document.getElementById('manualAbilityScores').addEventListener('click', () => {
+        modal.style.display = 'none';
+        showManualInputCard();
+    });
+}
+
+function showManualInputCard() {
+    const abilityCard = document.querySelector('#characterCreator .card:nth-child(2)');
+    const manualInputCard = document.getElementById('manualInputCard');
+    
+    abilityCard.classList.add('hidden');
+    manualInputCard.classList.remove('hidden');
+
+    document.getElementById('finishAssigning').addEventListener('click', assignManualAbilityScores);
+}
+
+function assignManualAbilityScores() {
+    const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+    
+    abilities.forEach(ability => {
+        const score = parseInt(document.getElementById(`${ability}Input`).value);
+        if (score >= 3 && score <= 18) {
+            character.abilityScores[ability] = score;
+            const modifier = Math.floor((score - 10) / 2);
+            character[`${ability}Modifier`] = modifier;
+            
+            // Update the UI
+            const abilityButton = document.querySelector(`[data-ability="${ability}"]`);
+            if (abilityButton) {
+                abilityButton.textContent = `${ability.charAt(0).toUpperCase() + ability.slice(1)}: ${score} (${modifier >= 0 ? '+' : ''}${modifier})`;
+                abilityButton.dataset.value = score;
+                abilityButton.disabled = true;
+            }
+        } else {
+            alert(`Invalid score for ${ability}. Please enter a number between 3 and 18.`);
+            return;
+        }
+    });
+
+    // Hide manual input card and show the next card
+    document.getElementById('manualInputCard').classList.add('hidden');
+    showCard(currentCardIndex + 1);
+}
+
 function updateSkillModifiers() {
     const sheetSkills = document.getElementById('sheetSkills');
     if (!sheetSkills) {
@@ -442,7 +495,7 @@ function updateClassFeatures() {
         console.warn('Class features list element not found');
         return;
     }
-
+console,log('classFeaturesList:', classFeaturesList);
     classFeaturesList.innerHTML = '';
 
     if (selectedClass && selectedClass.classFeatures) {
@@ -570,18 +623,18 @@ function showCard(index) {
         return;
     }
 
-    // if (index < 0 || index >= cards.length) {
-    //     console.error('Invalid card index');
-    //     return;
-    // }
-
     cards.forEach((card, i) => {
         card.classList.toggle('hidden', i !== index);
     });
 
-
     currentCardIndex = index;
     updateNavigationButtons();
+
+    // If we're showing the Ability Scores card for the first time, show the modal
+    if (index === 1 && !cards[index].dataset.modalShown) {
+        showAbilityScoreModal();
+        cards[index].dataset.modalShown = 'true';
+    }
 
     // If we're showing the Skills card, populate it
     if (index === 2) {
@@ -2413,34 +2466,6 @@ function addInventoryItem() {
     if (itemSelect) itemSelect.value = "";
 }
 
-// function updateCharacterAC(newArmor) {
-//     const dexMod = Math.floor((character.abilityScores.dexterity - 10) / 2);
-//     let baseAC = 10 + dexMod;
-
-//     // Find the highest AC armor in the inventory
-//     const bestArmor = character.inventory
-//         .filter(item => item.type === 'armor')
-//         .reduce((best, current) => (current.ac > best.ac ? current : best), { ac: 0 });
-
-//     if (bestArmor.ac > 0) {
-//         if (bestArmor.type === 'Light Armor') {
-//             baseAC = bestArmor.ac + dexMod;
-//         } else if (bestArmor.type === 'Medium Armor') {
-//             baseAC = bestArmor.ac + Math.min(dexMod, 2);
-//         } else if (bestArmor.type === 'Heavy Armor') {
-//             baseAC = bestArmor.ac;
-//         }
-//     }
-
-//     // Check for shield
-//     const hasShield = character.inventory.some(item => item.name === 'Shield');
-//     if (hasShield) {
-//         baseAC += 2;
-//     }
-
-//     character.ac = baseAC;
-//     updateCharacterSheet();
-// }
 
 function updateCharacterAC() {
     const dexMod = Math.floor((character.abilityScores.dexterity - 10) / 2);
@@ -2622,104 +2647,175 @@ function importDndBeyondCharacter() {
 }
 
 function processImportedCharacterData(data) {
-    console.log('Imported character data:', data);
+    //brad
     console.log('Processing imported D&D Beyond character data:', data);
-    // Initialize the character object
-    let importedCharacter = {
-        name: data.name || 'Unknown',
-        race: data.race || 'Unknown Race',
-        class: data.classes && data.classes[0] ? data.classes[0].definition.name : 'Unknown Class',
-        subclass: data.classes && data.classes[0] && data.classes[0].subclassDefinition ? data.classes[0].subclassDefinition.name : '',
-        level: data.classes && data.classes[0] ? data.classes[0].level : 1,
-        alignment: data.alignmentId || 'Unknown Alignment',
-        abilityScores: {
-            strength: data.stats.find(stat => stat.id === 1)?.value || 10,
-            dexterity: data.stats.find(stat => stat.id === 2)?.value || 10,
-            constitution: data.stats.find(stat => stat.id === 3)?.value || 10,
-            intelligence: data.stats.find(stat => stat.id === 4)?.value || 10,
-            wisdom: data.stats.find(stat => stat.id === 5)?.value || 10,
-            charisma: data.stats.find(stat => stat.id === 6)?.value || 10
-        },
-        skills: {},
-        hp: data.currentHp || 0,
-        maxHp: data.baseHitPoints || 0,
-        ac: data.armorClass || 10,
-        initiative: data.initiativeBonus || 0,
-        proficiencyBonus: data.proficiencyBonus || 2,
-        speed: data.race?.speed || 30,
-        savingThrows: {},
-        inventory: data.inventory || [],
-        spellcasting: {
-            class: data.classes && data.classes[0] ? data.classes[0].definition.name : '',
-            ability: data.classes && data.classes[0] && data.classes[0].definition.spellCastingAbilityId ? 
-                data.classes[0].definition.spellCastingAbilityId : null,
-            spells: Array.isArray(data.spells) ? data.spells : [],
-            spellSlots: {
-                1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+    try {
+        let importedCharacter = {
+            name: data.name || 'Unknown',
+            race: data.race?.fullName || data.race?.name || 'Unknown Race',
+            class: data.classes && data.classes[0] ? data.classes[0].definition.name : 'Unknown Class',
+            subclass: data.classes && data.classes[0] && data.classes[0].subclassDefinition ? data.classes[0].subclassDefinition.name : '',
+            level: data.classes && data.classes[0] ? data.classes[0].level : 1,
+            alignment: data.alignmentId || 'Unknown Alignment',
+            abilityScores: {},
+            skills: {},
+            hp: data.hitPointInfo?.current || 0,
+            maxHp: data.hitPointInfo?.max || 0,
+            ac: data.armorClass || 10,
+            initiative: data.initiativeBonus || 0,
+            proficiencyBonus: data.proficiencyBonus || 2,
+            speed: data.race?.weightSpeeds?.normal?.walk || 30,
+            savingThrows: {},
+            inventory: data.inventory || [],
+            spellcasting: {
+                class: data.classes && data.classes[0] ? data.classes[0].definition.name : '',
+                ability: null,
+                spells: data.spells || [],
+                spellSlots: {},
+                currentSpellSlots: {}
             },
-            currentSpellSlots: {
-                1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-            }
-        },
-        currency: data.currencies || {},
-        hitDie: {
-            number: data.classes && data.classes[0] ? data.classes[0].level : 1,
-            faces: data.classes && data.classes[0] ? data.classes[0].definition.hitDice : 6
-        },
-        traits: data.traits || {},
-        notes: data.notes || ''
-    };
-    // If spellSlots are provided in the data, use them
-    if (data.spellcasting && data.spellcasting.spellSlots) {
-        importedCharacter.spellcasting.spellSlots = {...data.spellcasting.spellSlots};
-        importedCharacter.spellcasting.currentSpellSlots = {...data.spellcasting.currentSpellSlots || data.spellcasting.spellSlots};
+            currency: data.currencies || {},
+            hitDie: {
+                number: data.classes && data.classes[0] ? data.classes[0].level : 1,
+                faces: data.classes && data.classes[0] ? data.classes[0].definition.hitDice : 6
+            },
+            traits: {
+                personalityTraits: data.traits?.personalityTraits || '',
+                ideals: data.traits?.ideals || '',
+                bonds: data.traits?.bonds || '',
+                flaws: data.traits?.flaws || ''
+            },
+            notes: data.notes || '',
+            background: data.background?.definition?.name || '',
+            experiencePoints: data.currentXp || 0
+        };
+
+        // Process ability scores
+        if (data.stats && Array.isArray(data.stats)) {
+            const abilityMap = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+            data.stats.forEach(stat => {
+                if (stat.id >= 1 && stat.id <= 6) {
+                    importedCharacter.abilityScores[abilityMap[stat.id - 1]] = stat.value || 10;
+                }
+            });
+        }
+
+        // Process skills
+        if (data.skills && Array.isArray(data.skills)) {
+            data.skills.forEach(skill => {
+                const skillName = skill.name.toLowerCase().replace(/\s+/g, '');
+                importedCharacter.skills[skillName] = {
+                    proficient: skill.proficient || false,
+                    expertise: skill.expertise || false,
+                    bonus: skill.value || 0
+                };
+            });
+        }
+
+        // Process saving throws
+        if (data.savingThrows && Array.isArray(data.savingThrows)) {
+            const abilityMap = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+            data.savingThrows.forEach(save => {
+                if (save.statId >= 1 && save.statId <= 6) {
+                    const abilityName = abilityMap[save.statId - 1];
+                    importedCharacter.savingThrows[abilityName] = {
+                        proficient: save.proficient || false,
+                        value: save.value || 0
+                    };
+                }
+            });
+        }
+
+        // Process spellcasting
+        if (data.classes && data.classes[0] && data.classes[0].definition.spellCastingAbilityId) {
+            const abilityMap = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+            importedCharacter.spellcasting.ability = abilityMap[data.classes[0].definition.spellCastingAbilityId - 1] || null;
+        }
+
+        if (data.spellSlots) {
+            importedCharacter.spellcasting.spellSlots = {...data.spellSlots};
+            importedCharacter.spellcasting.currentSpellSlots = {...data.spellSlots};
+        }
+
+        // Calculate derived stats
+        calculateDnDBeyondDerivedStats(importedCharacter);
+
+        // Update the character object
+        Object.assign(character, importedCharacter);
+
+        // Update the UI
+        updateDnDBeyondCharacterSheet(character);
+        updateDnDBeyondTraits(character);
+        updateDnDBeyondSimplifiedSpellSlots(character);
+
+        console.log('D&D Beyond character import complete:', character);
+    } catch (error) {
+        console.error('Error processing D&D Beyond character data:', error);
+        alert('There was an error processing the D&D Beyond character data. Some information may be incomplete.');
     }
-
-    // Process skills
-    if (data.skills) {
-        data.skills.forEach(skill => {
-            importedCharacter.skills[skill.name] = {
-                proficient: skill.proficient,
-                expertise: skill.expertise,
-                bonus: skill.value
-            };
-        });
-    }
-
-    // Process saving throws
-    if (data.savingThrows) {
-        data.savingThrows.forEach(save => {
-            importedCharacter.savingThrows[save.statId] = {
-                proficient: save.proficient,
-                value: save.value
-            };
-        });
-    }
-
-    // Calculate derived stats
-    calculateImportedCharacterStats(importedCharacter);
-
-    // Update the character object
-    Object.assign(character, importedCharacter);
-
-    // Update the UI
-    // After processing the data and updating the character object
-    updateCharacterSheet();
-    updateDnDBeyondCharacterSheet(character);
-    showCharacterSheet();
-
-    // Update traits specifically for D&D Beyond imports
-    updateDnDBeyondTraits(character);
-
-    // Update spell slots
-    updateDnDBeyondSimplifiedSpellSlots(importedCharacter);
-
-    // // Add a button to save the D&D Beyond character
-    // const saveButton = document.createElement('button');
-    // saveButton.textContent = 'Save D&D Beyond Character';
-    // saveButton.onclick = () => saveDnDBeyondCharacterToJson(importedCharacter);
-    // document.getElementById('optionsSection').appendChild(saveButton);
 }
+
+
+function calculateDnDBeyondDerivedStats(char) {
+    // Calculate ability modifiers
+    for (let ability in char.abilityScores) {
+        char[`${ability}Modifier`] = Math.floor((char.abilityScores[ability] - 10) / 2);
+    }
+
+    // Update saving throws
+    for (let save in char.savingThrows) {
+        char.savingThrows[save].value = char[`${save}Modifier`] || 0;
+        if (char.savingThrows[save].proficient) {
+            char.savingThrows[save].value += char.proficiencyBonus;
+        }
+    }
+
+    // Update skills
+    for (let skillName in char.skills) {
+        let associatedAbility = getAssociatedAbility(skillName);
+        char.skills[skillName].bonus = char[`${associatedAbility}Modifier`] || 0;
+        if (char.skills[skillName].proficient) {
+            char.skills[skillName].bonus += char.proficiencyBonus;
+        }
+        if (char.skills[skillName].expertise) {
+            char.skills[skillName].bonus += char.proficiencyBonus;
+        }
+    }
+
+    // Calculate passive perception
+    char.passivePerception = 10 + (char.skills.perception?.bonus || char.wisdomModifier || 0);
+
+    // Calculate spell save DC and spell attack bonus
+    if (char.spellcasting && char.spellcasting.ability) {
+        let spellAbilityModifier = char[`${char.spellcasting.ability}Modifier`] || 0;
+        char.spellcasting.spellSaveDC = 8 + char.proficiencyBonus + spellAbilityModifier;
+        char.spellcasting.spellAttackBonus = char.proficiencyBonus + spellAbilityModifier;
+    }
+
+    // Calculate initiative if not provided
+    if (char.initiative === undefined) {
+        char.initiative = char.dexterityModifier || 0;
+    }
+
+    // Calculate AC if not provided (assuming unarmored)
+    if (char.ac === undefined) {
+        char.ac = 10 + (char.dexterityModifier || 0);
+    }
+
+    console.log('Calculated D&D Beyond derived stats:', char);
+}
+
+
+function addSaveDnDBeyondCharacterButton(character) {
+const optionsSection = document.getElementById('optionsSection');
+if (optionsSection) {
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save D&D Beyond Character';
+    saveButton.onclick = () => saveDnDBeyondCharacterToJson(character);
+    optionsSection.appendChild(saveButton);
+}
+}
+
 
 function updateDnDBeyondSimplifiedSpellSlots(character) {
     const spellSlotsDiv = document.getElementById('combatSpellSlots');
@@ -2813,42 +2909,107 @@ function updateDnDBeyondCharacterSheet(char) {
     console.log('Updating D&D Beyond character sheet:', char);
 
     try {
+        // Helper function to safely update element text content
+        const updateElementText = (id, text) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = text;
+            } else {
+                console.warn(`Element with id '${id}' not found`);
+            }
+        };
+
         // Update character name and basic info
-        document.getElementById('sheetCharacterName').textContent = char.name;
-        document.getElementById('sheetRaceClass').textContent = `${char.race} - Level ${char.level} ${char.class} (${char.subclass}) - ${char.alignment}`;
+        updateElementText('sheetCharacterName', char.name);
+        updateElementText('sheetRaceClass', `${char.race} - Level ${char.level} ${char.class} (${char.subclass}) - ${char.alignment}`);
 
         // Update HP, AC, and Initiative
-        document.getElementById('sheetHP').textContent = `${char.hp}/${char.maxHp}`;
-        document.getElementById('sheetAC').textContent = char.ac;
-        document.getElementById('sheetInitiative').textContent = char.initiative >= 0 ? `+${char.initiative}` : char.initiative;
+        updateElementText('sheetHP', `${char.hp}/${char.maxHp}`);
+        updateElementText('sheetAC', char.ac);
+        
+        const initiativeButton = document.getElementById('rollInitiativeButton');
+        if (initiativeButton) {
+            initiativeButton.textContent = char.initiative >= 0 ? `+${char.initiative}` : char.initiative;
+        }
 
         // Update ability scores and modifiers
-        for (let ability in char.abilityScores) {
-            const score = char.abilityScores[ability];
-            const modifier = Math.floor((score - 10) / 2);
-            document.getElementById(`${ability}Score`).textContent = score;
-            document.getElementById(`${ability}Modifier`).textContent = modifier >= 0 ? `+${modifier}` : modifier;
+        const sheetAttributes = document.getElementById('sheetAttributes');
+        if (sheetAttributes) {
+            sheetAttributes.innerHTML = ''; // Clear existing content
+            for (const [ability, score] of Object.entries(char.abilityScores)) {
+                const modifier = Math.floor((score - 10) / 2);
+                const attributeBox = document.createElement('div');
+                attributeBox.className = 'attribute-box';
+                attributeBox.innerHTML = `
+                    <div class="attribute-name">${ability.charAt(0).toUpperCase() + ability.slice(1)}</div>
+                    <div class="attribute-score">${score}</div>
+                    <button class="roll-button attribute-check" data-ability="${ability}" data-modifier="${modifier}">
+                        Check (${modifier >= 0 ? '+' : ''}${modifier})
+                    </button>
+                    <button class="roll-button attribute-save" data-ability="${ability}" data-bonus="${char.savingThrows[ability].value}">
+                        Save (${char.savingThrows[ability].value >= 0 ? '+' : ''}${char.savingThrows[ability].value})
+                        ${char.savingThrows[ability].proficient ? '<span class="proficient-marker">●</span>' : ''}
+                    </button>
+                `;
+                sheetAttributes.appendChild(attributeBox);
+            }
         }
 
         // Update skills
-        for (let skill in char.skills) {
-            const skillElement = document.querySelector(`[data-skill="${skill}"]`);
-            if (skillElement) {
-                skillElement.querySelector('.skill-modifier').textContent = char.skills[skill].bonus >= 0 ? `+${char.skills[skill].bonus}` : char.skills[skill].bonus;
-                skillElement.querySelector('.skill-proficient').checked = char.skills[skill].proficient;
+        const sheetSkills = document.getElementById('sheetSkills');
+        if (sheetSkills) {
+            sheetSkills.innerHTML = ''; // Clear existing content
+            for (const [skillName, skillInfo] of Object.entries(char.skills)) {
+                const skillBox = document.createElement('div');
+                skillBox.className = 'skill-box';
+                skillBox.innerHTML = `
+                    <div class="skill-name">${skillName}</div>
+                    <button class="skill-bonus roll-button" data-skill="${skillName}" data-bonus="${skillInfo.bonus}">
+                        ${skillInfo.bonus >= 0 ? '+' : ''}${skillInfo.bonus}
+                    </button>
+                    ${skillInfo.proficient ? '<span class="proficient-marker">●</span>' : ''}
+                `;
+                sheetSkills.appendChild(skillBox);
             }
         }
 
-        // Update saving throws
-        for (let save in char.savingThrows) {
-            const saveElement = document.querySelector(`[data-save="${save}"]`);
-            if (saveElement) {
-                saveElement.querySelector('.save-modifier').textContent = char.savingThrows[save].value >= 0 ? `+${char.savingThrows[save].value}` : char.savingThrows[save].value;
-                saveElement.querySelector('.save-proficient').checked = char.savingThrows[save].proficient;
-            }
+        // Update inventory
+        const inventoryList = document.getElementById('inventoryList');
+        if (inventoryList) {
+            inventoryList.innerHTML = ''; // Clear existing content
+            char.inventory.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item.name;
+                inventoryList.appendChild(li);
+            });
         }
 
-        // Update other sections as needed...
+        // Update currency
+        ['copper', 'silver', 'electrum', 'gold', 'platinum'].forEach(currency => {
+            const input = document.getElementById(`${currency}Input`);
+            if (input) {
+                input.value = char.currency[currency] || 0;
+            }
+        });
+
+        // Update spell slots
+        updateDnDBeyondSimplifiedSpellSlots(character);
+
+        // Update combat section
+        //updateCombatSection(char);
+
+        // Update character notes
+        const characterNotes = document.getElementById('characterNotes');
+        if (characterNotes) {
+            characterNotes.value = char.notes || '';
+        }
+
+        // Update features and traits
+        const featuresList = document.getElementById('featuresList');
+        if (featuresList) {
+            featuresList.innerHTML = ''; // Clear existing content
+            // Add logic to populate features and traits here
+        }
 
         console.log('D&D Beyond character sheet updated successfully');
     } catch (error) {
