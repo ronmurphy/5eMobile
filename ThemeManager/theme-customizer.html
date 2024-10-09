@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Customizer</title>
+    <link rel="stylesheet" href="theme-customizer.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Theme Customizer</h1>
+        <div class="color-picker">
+            <label for="accentColor">Choose Accent Color:</label>
+            <input type="color" id="accentColor" value="#007bff">
+        </div>
+        <div class="color-name">
+            <label for="colorName">Color Name:</label>
+            <input type="text" id="colorName" placeholder="e.g., Sapphire">
+        </div>
+        <div class="mode-toggle">
+            <label for="darkMode">
+                Dark Mode
+                <input type="checkbox" id="darkMode">
+            </label>
+        </div>
+        <button id="openCss">Open CSS File</button>
+        <div class="preview">
+            <h2>Preview</h2>
+            <div class="preview-content">
+                <h3>Sample Heading</h3>
+                <p>This is some sample text to demonstrate how the theme looks.</p>
+                <button class="accent-button">Accent Button</button>
+            </div>
+        </div>
+        <div class="code-output">
+            <h2>Generated Code</h2>
+            <h3>CSS</h3>
+            <pre><code id="cssOutput"></code></pre>
+            <button id="copyCss">Copy and Save CSS</button>
+            <h3>JavaScript</h3>
+            <pre><code id="jsOutput"></code></pre>
+            <button id="copyJs">Copy JavaScript</button>
+            <h3>HTML (for index.html)</h3>
+            <pre><code id="htmlOutput"></code></pre>
+        </div>
+    </div>
+    <script src="theme-customizer.js"></script>
+</body>
+</html>

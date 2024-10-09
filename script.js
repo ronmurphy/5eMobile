@@ -418,33 +418,64 @@ function showManualInputCard() {
     document.getElementById('finishAssigning').addEventListener('click', assignManualAbilityScores);
 }
 
+// function assignManualAbilityScores() {
+//     const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+    
+//     abilities.forEach(ability => {
+//         const score = parseInt(document.getElementById(`${ability}Input`).value);
+//         if (score >= 3 && score <= 18) {
+//             character.abilityScores[ability] = score;
+//             const modifier = Math.floor((score - 10) / 2);
+//             character[`${ability}Modifier`] = modifier;
+            
+//             // Update the UI
+//             const abilityButton = document.querySelector(`[data-ability="${ability}"]`);
+//             if (abilityButton) {
+//                 abilityButton.textContent = `${ability.charAt(0).toUpperCase() + ability.slice(1)}: ${score} (${modifier >= 0 ? '+' : ''}${modifier})`;
+//                 abilityButton.dataset.value = score;
+//                 abilityButton.disabled = true;
+//             }
+//         } else {
+//             alert(`Invalid score for ${ability}. Please enter a number between 8 and 18.`);
+//             return;
+//         }
+//     });
+
+//     // Hide manual input card and show the next card
+//     document.getElementById('manualInputCard').classList.add('hidden');
+//     showCard(currentCardIndex + 1);
+// }
+
 function assignManualAbilityScores() {
     const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
-    
+  
     abilities.forEach(ability => {
-        const score = parseInt(document.getElementById(`${ability}Input`).value);
-        if (score >= 3 && score <= 18) {
-            character.abilityScores[ability] = score;
-            const modifier = Math.floor((score - 10) / 2);
-            character[`${ability}Modifier`] = modifier;
-            
-            // Update the UI
-            const abilityButton = document.querySelector(`[data-ability="${ability}"]`);
-            if (abilityButton) {
-                abilityButton.textContent = `${ability.charAt(0).toUpperCase() + ability.slice(1)}: ${score} (${modifier >= 0 ? '+' : ''}${modifier})`;
-                abilityButton.dataset.value = score;
-                abilityButton.disabled = true;
-            }
-        } else {
-            alert(`Invalid score for ${ability}. Please enter a number between 3 and 18.`);
-            return;
+      const score = parseInt(document.getElementById(`${ability}Input`).value);
+      if (score >= 3 && score <= 18) {
+        const racialBonus = getRacialBonus(ability);
+        const modifiedScore = score + racialBonus;
+  
+        character.abilityScores[ability] = modifiedScore;
+        const modifier = Math.floor((modifiedScore - 10) / 2);
+        character[`${ability}Modifier`] = modifier;
+  
+        // Update the UI
+        const abilityButton = document.querySelector(`[data-ability="${ability}"]`);
+        if (abilityButton) {
+          abilityButton.textContent = `${ability.charAt(0).toUpperCase() + ability.slice(1)}: ${modifiedScore} (${modifier >= 0 ? '+' : ''}${modifier})`;
+          abilityButton.dataset.value = modifiedScore;
+          abilityButton.disabled = true;
         }
+      } else {
+        alert(`Invalid score for ${ability}. Please enter a number between 8 and 18.`);
+        return;
+      }
     });
-
+  
     // Hide manual input card and show the next card
     document.getElementById('manualInputCard').classList.add('hidden');
     showCard(currentCardIndex + 1);
-}
+  }
 
 function updateSkillModifiers() {
     const sheetSkills = document.getElementById('sheetSkills');
@@ -644,24 +675,42 @@ function showCard(index) {
 
 
 
+// function populateSkillsList() {
+//     const skillList = document.getElementById('skillList');
+//     if (!skillList) return;
+
+//     skillList.innerHTML = '';
+//     Object.entries(character.skills).forEach(([skillName, skillInfo]) => {
+//         const skillDiv = document.createElement('div');
+//         skillDiv.classList.add('skill-item');
+//         const formattedSkillName = skillName.replace(/([A-Z])/g, ' $1').trim();
+//         skillDiv.innerHTML = `
+//             <label>
+//                 <input type="checkbox" name="skill_${skillName}" ${skillInfo.proficient ? 'checked' : ''}>
+//                 ${formattedSkillName}
+//             </label>
+//         `;
+//         skillList.appendChild(skillDiv);
+//     });
+// }
+
 function populateSkillsList() {
     const skillList = document.getElementById('skillList');
     if (!skillList) return;
-
+  
     skillList.innerHTML = '';
     Object.entries(character.skills).forEach(([skillName, skillInfo]) => {
-        const skillDiv = document.createElement('div');
-        skillDiv.classList.add('skill-item');
-        const formattedSkillName = skillName.replace(/([A-Z])/g, ' $1').trim();
-        skillDiv.innerHTML = `
-            <label>
-                <input type="checkbox" name="skill_${skillName}" ${skillInfo.proficient ? 'checked' : ''}>
-                ${formattedSkillName}
-            </label>
-        `;
-        skillList.appendChild(skillDiv);
+      const skillDiv = document.createElement('div');
+      skillDiv.classList.add('skill-item');
+      const formattedSkillName = skillName.replace(/([A-Z])/g, ' $1').trim();
+      skillDiv.innerHTML = `
+        <label>
+          ${formattedSkillName} ${skillInfo.proficient ? '(Proficient)' : ''}
+        </label>
+      `;
+      skillList.appendChild(skillDiv);
     });
-}
+  }
 
 function updateNavigationButtons() {
     const cards = Array.from(document.querySelectorAll('#characterCreator .card'));
@@ -987,10 +1036,27 @@ function updateCharacterSheet() {
         const hpElement = document.getElementById('sheetHP');
         if (hpElement) hpElement.textContent = `${character.hp || 0}/${character.maxHp || 0}`;
         
-        const acElement = document.getElementById('sheetAC');
-        if (acElement) acElement.textContent = character.ac || 10;
-        updateACDisplay();
+        // const acElement = document.getElementById('sheetAC');
+        // if (acElement) acElement.textContent = character.ac || 10;
+        // updateACDisplay();
         
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const acElement = document.getElementById('sheetAC');
+            if (acElement) {
+              // Update AC on input events that affect AC
+              // Replace "ac-trigger" with the actual element(s) that trigger AC recalculation
+              document.querySelectorAll(".ac-trigger").forEach(trigger => {
+                trigger.addEventListener("input", () => {
+                  updateCharacterAC();
+                });
+              });
+            
+              // Set initial AC value (optional)
+              acElement.textContent = character.ac || 10;
+            }
+          });
+
         const initiativeElement = document.getElementById('sheetInitiative');
         if (initiativeElement) {
             const initiative = character.initiative || 0;
@@ -2529,6 +2595,8 @@ function addItemToInventory(item) {
     if (!character.inventory) character.inventory = [];
     character.inventory.push(item);
     updateInventoryDisplay();
+    console.log('Added item to inventory:', item);
+    console.log(item.type);
     if (item.type === 'armor') {
         updateCharacterAC();
     }

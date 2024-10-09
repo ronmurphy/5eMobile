@@ -1,0 +1,573 @@
+:root {
+    --primary-color: #4a4a4a;
+    --secondary-color: #f0f0f0;
+    --accent-color: #007bff;
+    --text-color: #333;
+    --background-color: #ffffff;
+    --card-background: #ffffff;
+    --border-color: #ddd;
+    --button-text-color: #ffffff;
+    --border-radius: 8px;
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --accent-hover-light: hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) * 0.8));
+    --accent-hover-dark: hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) * 1.2));
+    --text-on-accent: #ffffff;
+    --button-hover-overlay: rgba(0, 0, 0, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    padding: 20px;
+    transition: background-color 0.3s ease;
+    --accent-h: 0;
+    --accent-s: 0%;
+    --accent-l: 50%;    
+}
+
+body.dark-mode {
+    --primary-color: var(--accent-color);
+    --secondary-color: #121212;
+    --text-color: #e0e0e0;
+    --background-color: #121212;
+    --card-background: #1e1e1e;
+    --border-color: #333;
+    --button-text-color: var(--text-color);
+    --text-on-accent: #000000;
+    --button-hover-overlay: rgba(255, 255, 255, 0.2);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--accent-color);
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* h1, h2, h3 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+} */
+
+button, .accent-button {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+}
+
+button:hover, .accent-button:hover {
+    background-color: var(--accent-hover-light);
+}
+
+body.dark-mode button:hover, body.dark-mode .accent-button:hover {
+    background-color: var(--accent-hover-dark);
+}
+
+.card {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--card-shadow);
+}
+
+.header {
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    color: #fff;
+    margin-bottom: 0;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+button {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+button:hover {
+    background-color: var(--accent-hover-light);
+}
+
+body.dark-mode button:hover {
+    background-color: var(--accent-hover-dark);
+}
+
+button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--button-hover-overlay);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+button:hover::after {
+    opacity: 1;
+}
+
+/* Ensure text remains visible when hovering */
+button:hover {
+    color: var(--text-on-accent);
+}
+
+.hidden {
+    display: none;
+}
+
+.navigation-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.ability-scores {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.ability-column {
+    width: 48%;
+}
+
+.ability-score {
+    margin-bottom: 15px;
+}
+
+.ability-score button {
+    width: 100%;
+    text-align: left;
+    position: relative;
+    padding-right: 40px;
+}
+
+.ability-modifier {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.roll-options {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+}
+
+.roll-option {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.racial-bonus::after {
+    content: '*';
+    color: #dc3545;
+    margin-left: 2px;
+}
+
+#skillList {
+    columns: 2;
+}
+
+.skill-item {
+    margin-bottom: 5px;
+}
+
+.theme-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--card-background);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    z-index: 1000;
+}
+
+.theme-color-container {
+    flex: 3;
+    padding-right: 15px;
+}
+
+.theme-mode-container {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+#themeColor {
+    width: 100%;
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.theme-mode-container label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+#themeMode {
+    margin-left: 10px;
+}
+
+@media (max-width: 600px) {
+    .theme-controls {
+        flex-direction: column;
+    }
+
+    .theme-color-container,
+    .theme-mode-container {
+        width: 100%;
+        padding: 5px 0;
+    }
+
+    .theme-mode-container {
+        justify-content: center;
+    }
+}
+
+/* Dark mode styles */
+.dark-mode {
+    --primary-color: #bb86fc;
+    --secondary-color: #121212;
+    --text-color: #e0e0e0;
+    --background-color: #121212;
+    --card-background: #1e1e1e;
+    --border-color: #333;
+    --button-text-color: #121212;
+}
+
+.dark-mode .header {
+    background-color: #000000;
+}
+
+@media (max-width: 600px) {
+    .ability-column {
+        width: 100%;
+    }
+
+    #skillList {
+        columns: 1;
+    }
+}
+.race-info, .class-info {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+.race-info h3, .class-info h3 {
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+#raceTraitsList, #classFeaturesList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#raceTraitsList li, #classFeaturesList li {
+    margin-bottom: 5px;
+    padding: 5px;
+    background-color: var(--secondary-color);
+    border-radius: 4px;
+}
+
+#raceTraitsList li:nth-child(even), #classFeaturesList li:nth-child(even) {
+    background-color: var(--background-color);
+}
+
+/* char sheet */
+
+.character-sheet {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.character-sheet-fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--background-color);
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.character-header {
+    background-color: var(--primary-color);
+    color: var(--text-on-accent);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.character-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.character-info h1 {
+    margin: 0;
+    font-size: 1.5em;
+    color: var(--text-on-accent);
+}
+
+.character-info p {
+    margin: 5px 0 0;
+    font-size: 1em;
+    opacity: 0.8;
+}
+
+.character-stats {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.stat-box {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    min-width: 80px;
+}
+
+.stat-box label {
+    display: block;
+    font-size: 0.8em;
+    margin-bottom: 5px;
+    color: var(--text-on-accent);
+}
+
+.stat-box span {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--text-on-accent);
+}
+
+.sheet-navigation {
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--card-background);
+}
+
+.sheet-content {
+    margin-top: 120px; /* Adjust this value based on the actual height of your fixed header */
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.sheet-section {
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+#sheetAttributes, #sheetSkills {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.attribute-grid, .saving-throws-grid, .skills-grid {
+    display: grid;
+    gap: 15px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+/* .attribute-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+}
+
+.saving-throws-grid {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.skills-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+} */
+
+.attribute-box, .saving-throw-box, .skill-box {
+    background-color: var(--secondary-color);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    text-align: center;
+}
+
+.attribute-box strong, .saving-throw-box strong, .skill-box strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+@media (max-width: 600px) {
+    .saving-throws-grid, .skills-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .character-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .character-stats {
+        margin-top: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .sheet-content {
+        margin-top: 160px; /* Adjust for smaller screens */
+    }
+}
+
+/* dice */
+
+.roll-button {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.roll-button:hover {
+    background-color: var(--accent-hover-light);
+}
+
+body.dark-mode .roll-button:hover {
+    background-color: var(--accent-hover-dark);
+}
+
+.roll-button strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: opacity 0.5s;
+}
+
+.notification.fade-out {
+    opacity: 0;
+}
+#characterNotes {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.options-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.options-buttons button {
+    flex: 1;
+    margin: 0 5px;
+}
+
+.theme-controls-embed {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+}
+
+.theme-controls-embed .theme-color-container,
+.theme-controls-embed .theme-mode-container {
+    flex: 1;
+}
+
+#themeColorEmbed {
+    width: 100%;
+}

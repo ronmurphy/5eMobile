@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D 5e Character Creator</title>
+    <meta name="description" content="Create and manage your D&D 5e characters with ease using this mobile-friendly character creator and sheet manager.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>D&D 5e Character Creator</h1>
+        </div>
+
+        <div id="startMenu" class="card">
+            <h2>Welcome to the D&D 5e Character Creator</h2>
+            <p>This app will guide you through creating your character step by step. You'll be able to choose your race, class, ability scores, and more.</p>
+            <p>Use the form fields to input your character's information. For ability scores, you can roll 3 times for each attribute and select your preferred score.</p>
+            <p>Once you've completed your character, you can save it as a JSON file for future use.</p>
+        </div>
+
+        <div id="characterCreator" class="hidden">
+            <form id="characterForm">
+                <div class="card">
+                    <h2>Basic Information</h2>
+                    <div class="form-group">
+                        <label for="name">Character Name:</label>
+                        <input type="text" id="name" name="name" required>
+                        <button type="button" id="randomName">Random Name</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="race">Race:</label>
+                        <select id="race" name="race" required>
+                            <option value="">Select a race</option>
+                            <option value="Dwarf">Dwarf</option>
+                            <option value="Elf">Elf</option>
+                            <option value="Halfling">Halfling</option>
+                            <option value="Human">Human</option>
+                            <option value="Dragonborn">Dragonborn</option>
+                            <option value="Gnome">Gnome</option>
+                            <option value="Half-Elf">Half-Elf</option>
+                            <option value="Half-Orc">Half-Orc</option>
+                            <option value="Tiefling">Tiefling</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="class">Class:</label>
+                        <select id="class" name="class" required>
+                            <option value="">Select a class</option>
+                            <option value="Barbarian">Barbarian</option>
+                            <option value="Bard">Bard</option>
+                            <option value="Cleric">Cleric</option>
+                            <option value="Druid">Druid</option>
+                            <option value="Fighter">Fighter</option>
+                            <option value="Monk">Monk</option>
+                            <option value="Paladin">Paladin</option>
+                            <option value="Ranger">Ranger</option>
+                            <option value="Rogue">Rogue</option>
+                            <option value="Sorcerer">Sorcerer</option>
+                            <option value="Warlock">Warlock</option>
+                            <option value="Wizard">Wizard</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="level">Level:</label>
+                        <input type="number" id="level" name="level" min="1" max="20" value="1" required>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Ability Scores</h2>
+                    <div class="ability-scores">
+                        <div class="ability-column">
+                            <!-- First column of abilities will be dynamically populated -->
+                        </div>
+                        <div class="ability-column">
+                            <!-- Second column of abilities will be dynamically populated -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Skills</h2>
+                    <div id="skillList">
+                        <!-- Skills will be dynamically populated here -->
+                    </div>
+                </div>
+
+                <button type="submit" id="saveCharacterButton" class="hidden">Save Character</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="navigation-buttons">
+        <button id="prevButton" class="hidden">Previous</button>
+        <button id="nextButton">Next</button>
+    </div>
+
+    <div class="theme-controls">
+        <select id="themeColor">
+            <option value="#007bff">Blue</option>
+            <option value="#28a745">Green</option>
+            <option value="#dc3545">Red</option>
+            <option value="#ffc107">Yellow</option>
+            <option value="#6f42c1">Purple</option>
+        </select>
+        <label for="themeMode">
+            Dark Mode
+            <input type="checkbox" id="themeMode">
+        </label>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

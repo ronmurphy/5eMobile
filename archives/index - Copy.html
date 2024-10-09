@@ -19,36 +19,12 @@
             <p>Once you've completed your character, you can save it and view your character sheet.</p>
             <div class="navigation-buttons">
                 <button class="next-button">Start</button>
-                <button id="randomCharacter" class="random-button">Random</button>
-                <button id="showDndBeyondImport" class="themed-button">Import</button>
+                <button id="randomCharacter" class="random-button">Random Character</button>
             </div>
         </div>
 
-        <div id="dndBeyondImportCard" class="card hidden">
-            <h2>Import Character</h2>
-            <p>To import from D&D Beyond:</p>
-            <ol>
-                <li>Drag this link to your bookmarks bar: <a href="javascript:(()=>{var d=(a,e)=>()=>(e||a((e={exports:{}}).exports,e),e.exports);var p=d(()=>{var s=window.location.toString().match(/https:\/\/www\.dndbeyond\.com\/characters\/(\d+)/);if(!s)return;var r='https://character-service.dndbeyond.com/character/v5/character',i='https://character-service.dndbeyond.com/character/v5/game-data',l=s[1],h=(a,e)=>{let t=document.createElement('a');t.setAttribute('href','data:application/json;charset=utf-8,'+encodeURIComponent(e)),t.setAttribute('download',a),t.style.display='none',document.body.appendChild(t),t.click(),document.body.removeChild(t)};(async()=>{let a=await fetch(`${r}/${l}`),{data:e}=await a.json();for(let{level:t,subclassDefinition:c}of e.classes){if(!c)continue;let o=await fetch(`${i}/always-prepared-spells?classLevel=${t}&classId=${c.id}&campaign=${e.campaign?e.campaign.id:void 0}`),{data:n}=await o.json();n.length!==0&&e.classSpells.push({entityTypeId:0,characterClassId:c.id,spells:n})}h(`${e.name}.json`,JSON.stringify(e))})().catch(console.error)});p();})();">D&D Beyond Export</a></li>
-                <li>Go to your character page on D&D Beyond</li>
-                <li>Click the bookmarklet in your bookmarks bar</li>
-                <li>Save the downloaded JSON file</li>
-                <li>Upload the JSON file here:</li>
-            </ol>
-            <input type="file" id="jsonFileInput" accept=".json">
-            <div class="navigation-buttons">
-                <button id="importDndBeyondCharacter" class="themed-button">D&D Beyond</button>
-                <button id="loadExistingCharacter" class="themed-button">App Char.</button>
-                <button id="cancelImport" class="themed-button">Cancel</button>
-            </div>
-        </div>
-
-        <div id="none"class="hidden" >
-            <p>None</p>
-        </div>
-
-        <div id="characterCreator"class="hidden" >
+        <div id="characterCreator" class="hidden">
             <form id="characterForm">
-                <!-- Basic Information Card -->
                 <div class="card">
                     <h2>Basic Information</h2>
                     <div class="form-group">
@@ -60,12 +36,14 @@
                         <label for="race">Race:</label>
                         <select id="race" name="race" required>
                             <option value="">Select a race</option>
+                            <!-- Races will be populated dynamically -->
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="class">Class:</label>
                         <select id="class" name="class" required>
                             <option value="">Select a class</option>
+                            <!-- Classes will be populated dynamically -->
                         </select>
                     </div>
                     <div class="form-group">
@@ -76,39 +54,42 @@
                         <label for="subclass">Subclass:</label>
                         <select id="subclass" name="subclass" disabled>
                             <option value="">Select a subclass</option>
+                            <!-- Subclasses will be populated dynamically -->
                         </select>
                     </div>
                     <div class="navigation-buttons">
-                        <button type="button" class="prev-button hidden">Previous</button>
-                        <button type="button" class="next-button">Next</button>
+                        <button class="prev-button hidden">Previous</button>
+                        <button class="next-button">Next</button>
                     </div>
                 </div>
-        
-                <!-- Ability Scores Card -->
+
                 <div class="card hidden">
                     <h2>Ability Scores</h2>
-                    <div class="ability-columns">
-                        <!-- Ability scores will be dynamically added here -->
+                    <div class="ability-scores">
+                        <div class="ability-column">
+                            <!-- First column of abilities will be dynamically populated -->
+                        </div>
+                        <div class="ability-column">
+                            <!-- Second column of abilities will be dynamically populated -->
+                        </div>
                     </div>
                     <div class="navigation-buttons">
-                        <button type="button" class="prev-button">Previous</button>
-                        <button type="button" class="next-button">Next</button>
+                        <button class="prev-button">Previous</button>
+                        <button class="next-button">Next</button>
                     </div>
                 </div>
-        
-                <!-- Skills Card -->
+
                 <div class="card hidden">
                     <h2>Skills</h2>
                     <div id="skillList">
-                        <!-- Skills will be dynamically added here -->
+                        <!-- Skills will be dynamically populated here -->
                     </div>
                     <div class="navigation-buttons">
-                        <button type="button" class="prev-button">Previous</button>
-                        <button type="button" class="next-button">Next</button>
+                        <button class="prev-button">Previous</button>
+                        <button class="next-button">Next</button>
                     </div>
                 </div>
-        
-                <!-- Review and Save Card -->
+
                 <div class="card hidden">
                     <h2>Review and Save</h2>
                     <p>Review your character details here.</p>
@@ -121,7 +102,7 @@
                         <ul id="classFeaturesList"></ul>
                     </div>
                     <div class="navigation-buttons">
-                        <button type="button" class="prev-button">Previous</button>
+                        <button class="prev-button">Previous</button>
                         <button type="button" id="saveCharacterButton">Save Character</button>
                     </div>
                 </div>
@@ -148,8 +129,17 @@
                             <label>Initiative</label>
                             <button id="rollInitiativeButton"></button>
                         </div>
-                        <button id="restButton" class="stat-box">Rest</button>
+                        <button id="restButton" class="themed-button">Rest</button>
                     </div>
+                </div>
+                <div id="restModal" class="modal">
+                    <div class="modal-content">
+                        <h2>Choose Rest Type</h2>
+                        <button id="shortRestButton" class="themed-button">Short Rest</button>
+                        <button id="longRestButton" class="themed-button">Long Rest</button>
+                        <button id="closeRestModal" class="themed-button">Close</button>
+                    </div>
+                </div>
                 </div>
                 <div class="sheet-navigation">
                     <button id="prevSection" class="nav-button">Previous</button>
@@ -198,7 +188,6 @@
                     <div id="spellSlots">
                         <h4>Spell Slots:</h4>
                         <div class="spell-slot-row"></div>
-                        <div id="spellSlots"></div>
                     </div>
                     <div id="spellManagement">
                         <select id="spellSelect"></select>
@@ -208,41 +197,22 @@
                         <!-- Spell list categories will be dynamically added here -->
                     </div>
                 </div>
-                <div id="combatSection" class="sheet-section hidden">
-                    <h3>Combat</h3>
-                    <div class="combat-content">
-                        <div id="weaponsContainer">
-                            <h4>Weapons</h4>
-                            <ul id="weaponsList"></ul>
-                        </div>
-                        <div id="combatSpellsContainer">
-                            <h4>Combat Spells</h4>
-                            <div id="combatSpellSlots"></div>
-                            <ul id="combatSpellsList"></ul>
-                        </div>
-                    </div>
-                </div>
                 <div id="optionsSection" class="sheet-section hidden">
                     <h3>Options</h3>
                     <div class="options-content">
-                        `<div id="rollHistory" class="roll-history">
-                            <h4>Recent Rolls</h4>
-                            <!-- Roll history will be populated here -->
-                        </div>`
-                        <div class="form-group">
-                            <label for="characterNotes">Character Notes:</label>
-                            <textarea id="characterNotes" rows="5"></textarea>
-                        </div>
-                        <div id="featuresSection">
-                            <h3>Features and Traits</h3>
-                            <ul id="featuresList"></ul>
-                        </div>
-                        <div class="options-buttons">
-                            <button id="saveCharacterJson">Save to JSON</button>
-                            <button id="loadCharacterJson">Load from JSON</button>
-                            <button id="returnToCreator">Return to Creator</button>
-                            <button id="levelUp">Level Up (+1)</button>
-                        </div>
+                    <div class="form-group">
+                        <label for="characterNotes">Character Notes:</label>
+                        <textarea id="characterNotes" rows="5"></textarea>
+                    </div>
+                    <div id="featuresSection" class="sheet-section hidden">
+                        <h3>Features and Traits</h3>
+                        <ul id="featuresList"></ul>
+                    </div>
+                    <div class="options-buttons">
+                        <button id="saveCharacterJson">Save to JSON</button>
+                        <button id="loadCharacterJson">Load from JSON</button>
+                        <button id="returnToCreator">Return to Creator</button>
+                        <button id="levelUp">Level Up (+1)</button>
                     </div>
                 </div>
             </div>
@@ -270,65 +240,6 @@
         </div>
     </div>
 
-    <!-- Modals -->
-    <div id="hpModal" class="modal">
-        <div class="modal-content">
-            <h2>Modify HP</h2>
-            <input type="number" id="hpChangeAmount" placeholder="Enter amount">
-            <button id="healButton">Heal</button>
-            <button id="damageButton">Damage</button>
-            <button id="closeModal">Close</button>
-        </div>
-    </div>
-
-    <div id="restModal" class="modal">
-        <div class="modal-content">
-            <h2>Choose Rest Type</h2>
-            <button id="shortRestButton" class="themed-button">Short Rest</button>
-            <button id="longRestButton" class="themed-button">Long Rest</button>
-            <button id="closeRestModal" class="themed-button">Close</button>
-        </div>
-    </div>
-
-    <div id="abilityScoreModal" class="modal">
-        <div class="modal-content">
-            <h2>Choose Ability Score Method</h2>
-            <button id="randomAbilityScores" class="themed-button">Roll Dice</button>
-            <button id="manualAbilityScores" class="themed-button">You Assign</button>
-        </div>
-    </div>
-    
-    <div id="manualInputCard" class="card hidden">
-        <h2>Manual Ability Score Input</h2>
-        <p>Scores can be from 8 to 18</p>
-        <div class="ability-input-grid">
-            <div class="ability-input">
-                <label for="strengthInput">Strength</label>
-                <input type="number" id="strengthInput" min="8" max="18">
-            </div>
-            <div class="ability-input">
-                <label for="dexterityInput">Dexterity</label>
-                <input type="number" id="dexterityInput" min="8" max="18">
-            </div>
-            <div class="ability-input">
-                <label for="constitutionInput">Constitution</label>
-                <input type="number" id="constitutionInput" min="8" max="18">
-            </div>
-            <div class="ability-input">
-                <label for="intelligenceInput">Intelligence</label>
-                <input type="number" id="intelligenceInput" min="8" max="18">
-            </div>
-            <div class="ability-input">
-                <label for="wisdomInput">Wisdom</label>
-                <input type="number" id="wisdomInput" min="8" max="18">
-            </div>
-            <div class="ability-input">
-                <label for="charismaInput">Charisma</label>
-                <input type="number" id="charismaInput" min="8" max="18">
-            </div>
-        </div>
-        <button id="finishAssigning" class="themed-button">Finish Assigning</button>
-    </div>
     <script src="script.js"></script>
 </body>
 </html>

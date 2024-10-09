@@ -1,0 +1,88 @@
+:root {
+    --primary-color: #4a4a4a;
+    --secondary-color: #f0f0f0;
+    --accent-color: #007bff;
+    --text-color: #333;
+    --background-color: #ffffff;
+    --card-background: #ffffff;
+    --border-color: #ddd;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+h1, h2, h3 {
+    color: var(--accent-color);
+}
+
+.color-picker, .mode-toggle {
+    margin-bottom: 20px;
+}
+
+.preview {
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.accent-button {
+    background-color: var(--accent-color);
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.code-output {
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+button {
+    background-color: var(--accent-color);
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+    --primary-color: #bb86fc;
+    --secondary-color: #121212;
+    --text-color: #e0e0e0;
+    --background-color: #121212;
+    --card-background: #1e1e1e;
+    --border-color: #333;
+}
+
+body.dark-mode pre {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+}
