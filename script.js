@@ -7,6 +7,7 @@ const skills = [
     'Sleight of Hand', 'Stealth', 'Survival'
 ];
 const spellLevels = ['Cantrips', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
+const APP_VERSION = "2";  // Note: It's a string to match the JSON format
 
 let races = {};
 let classes = [];
@@ -215,7 +216,12 @@ function initializeDOMElements() {
     }
 }
 
-
+function updateVersionDisplay() {
+    const versionElement = document.getElementById('appVersion');
+    if (versionElement) {
+        versionElement.textContent = `(v${APP_VERSION})`;
+    }
+}
 
 function startCharacterCreation() {
     console.log('Starting character creation');
@@ -2186,10 +2192,31 @@ function generateRandomCharacter() {
     showCharacterSheet();
 }
 
+// function saveCharacterToJson() {
+//     const characterData = { ...character };
+//     characterData.spellcasting.spells = character.spellcasting.spells.map(spell => spell.name);
+//     const characterJson = JSON.stringify(characterData, null, 2);
+//     const blob = new Blob([characterJson], { type: 'application/json' });
+//     const url = URL.createObjectURL(blob);
+//     const a = document.createElement('a');
+//     a.href = url;
+//     a.download = `${character.name || 'character'}.json`;
+//     document.body.appendChild(a);
+//     a.click();
+//     document.body.removeChild(a);
+//     URL.revokeObjectURL(url);
+// }
+
 function saveCharacterToJson() {
     const characterData = { ...character };
     characterData.spellcasting.spells = character.spellcasting.spells.map(spell => spell.name);
-    const characterJson = JSON.stringify(characterData, null, 2);
+    
+    const versionedData = {
+        version: APP_VERSION,
+        ...characterData
+    };
+
+    const characterJson = JSON.stringify(versionedData, null, 2);
     const blob = new Blob([characterJson], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2201,6 +2228,39 @@ function saveCharacterToJson() {
     URL.revokeObjectURL(url);
 }
 
+// function loadCharacterFromJson() {
+//     const input = document.createElement('input');
+//     input.type = 'file';
+//     input.accept = '.json';
+//     input.onchange = (event) => {
+//         const file = event.target.files[0];
+//         const reader = new FileReader();
+//         reader.onload = (e) => {
+//             try {
+//                 const loadedCharacter = JSON.parse(e.target.result);
+//                 Object.assign(character, loadedCharacter);
+                
+//                 // Process spellcasting data
+//                 if (character.spellcasting && character.spellcasting.spells) {
+//                     character.spellcasting.spells = character.spellcasting.spells.map(spellName => 
+//                         spells.find(spell => spell.name === spellName)
+//                     ).filter(spell => spell !== undefined);
+//                 }
+                
+//                 updateCharacterSheet();
+//                 showCharacterSheet();
+//                 hideDndBeyondImportCard(); // Add this line to hide the import card
+//                 console.log('Character loaded successfully');
+//             } catch (error) {
+//                 console.error('Error loading character:', error);
+//                 alert('Error loading character. Please check the file format.');
+//             }
+//         };
+//         reader.readAsText(file);
+//     };
+//     input.click();
+// }
+
 function loadCharacterFromJson() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -2210,8 +2270,17 @@ function loadCharacterFromJson() {
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                const loadedCharacter = JSON.parse(e.target.result);
-                Object.assign(character, loadedCharacter);
+                const loadedData = JSON.parse(e.target.result);
+                
+                if (loadedData.version) {
+                    console.log(`Loading character file version: ${loadedData.version}`);
+                    // Remove the version property before assigning to character
+                    const { version, ...characterData } = loadedData;
+                    Object.assign(character, characterData);
+                } else {
+                    console.log('Loading legacy character file');
+                    Object.assign(character, loadedData);
+                }
                 
                 // Process spellcasting data
                 if (character.spellcasting && character.spellcasting.spells) {
@@ -2222,7 +2291,7 @@ function loadCharacterFromJson() {
                 
                 updateCharacterSheet();
                 showCharacterSheet();
-                hideDndBeyondImportCard(); // Add this line to hide the import card
+                hideDndBeyondImportCard();
                 console.log('Character loaded successfully');
             } catch (error) {
                 console.error('Error loading character:', error);
@@ -2233,7 +2302,6 @@ function loadCharacterFromJson() {
     };
     input.click();
 }
-
 
 function resetCharacter() {
     Object.keys(character).forEach(key => {
@@ -2399,6 +2467,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.addEventListener('DOMContentLoaded', () => {
+        // ... your existing DOMContentLoaded code ...
+        updateVersionDisplay();
+    });
+
         // Add event listeners for navigation buttons
         document.querySelectorAll('.next-button').forEach(button => {
             button.addEventListener('click', (e) => {
@@ -2430,7 +2503,8 @@ function init() {
     loadInventoryData();
     initializeSpellcasting();
     updateSpellcastingUI();
-    
+    updateVersionDisplay();
+
     // Only update skills if the character sheet is visible
     if (!document.getElementById('characterSheet').classList.contains('hidden')) {
         updateSkillModifiers();
@@ -2915,6 +2989,64 @@ function updateDnDBeyondSimplifiedSpellSlots(character) {
     spellSlotsDiv.appendChild(row);
 }
 
+// function saveDnDBeyondCharacterToJson(character) {
+//     const characterData = {
+//         name: character.name,
+//         race: character.race,
+//         class: character.class,
+//         subclass: character.subclass,
+//         level: character.level,
+//         background: character.background,
+//         alignment: character.alignment,
+//         experiencePoints: character.experiencePoints,
+//         abilityScores: { ...character.abilityScores },
+//         skills: { ...character.skills },
+//         proficiencyBonus: character.proficiencyBonus,
+//         hp: character.hp,
+//         maxHp: character.maxHp,
+//         ac: character.ac,
+//         initiative: character.initiative,
+//         speed: character.speed,
+//         hitDie: character.hitDie,
+//         savingThrows: { ...character.savingThrows },
+//         traits: {
+//             personalityTraits: character.personalityTraits,
+//             ideals: character.ideals,
+//             bonds: character.bonds,
+//             flaws: character.flaws
+//         },
+//         features: [], // You may need to populate this from character.features if available
+//         inventory: character.inventory.map(item => ({
+//             name: item.name,
+//             quantity: item.quantity,
+//             weight: item.weight,
+//             description: item.description
+//         })),
+//         spellcasting: {
+//             class: character.spellcasting.class,
+//             ability: character.spellcasting.ability,
+//             spellSaveDC: character.spellcasting.spellSaveDC,
+//             spellAttackBonus: character.spellcasting.spellAttackBonus,
+//             spells: character.spellcasting.spells.map(spell => typeof spell === 'string' ? spell : spell.name),
+//             spellSlots: { ...character.spellcasting.spellSlots },
+//             currentSpellSlots: { ...character.spellcasting.currentSpellSlots }
+//         },
+//         currency: { ...character.currency },
+//         notes: character.notes
+//     };
+
+//     const characterJson = JSON.stringify(characterData, null, 2);
+//     const blob = new Blob([characterJson], { type: 'application/json' });
+//     const url = URL.createObjectURL(blob);
+//     const a = document.createElement('a');
+//     a.href = url;
+//     a.download = `${character.name || 'character'}.json`;
+//     document.body.appendChild(a);
+//     a.click();
+//     document.body.removeChild(a);
+//     URL.revokeObjectURL(url);
+// }
+
 function saveDnDBeyondCharacterToJson(character) {
     const characterData = {
         name: character.name,
@@ -2934,6 +3066,8 @@ function saveDnDBeyondCharacterToJson(character) {
         initiative: character.initiative,
         speed: character.speed,
         hitDie: character.hitDie,
+        maxHitDice: character.maxHitDice,
+        currentHitDice: character.currentHitDice,
         savingThrows: { ...character.savingThrows },
         traits: {
             personalityTraits: character.personalityTraits,
@@ -2958,10 +3092,18 @@ function saveDnDBeyondCharacterToJson(character) {
             currentSpellSlots: { ...character.spellcasting.currentSpellSlots }
         },
         currency: { ...character.currency },
-        notes: character.notes
+        notes: character.notes,
+        languages: character.languages || [],
+        feats: character.feats || [],
+        abilityScoreImprovementsLeft: character.abilityScoreImprovementsLeft || 0
     };
 
-    const characterJson = JSON.stringify(characterData, null, 2);
+    const versionedData = {
+        version: APP_VERSION,
+        ...characterData
+    };
+
+    const characterJson = JSON.stringify(versionedData, null, 2);
     const blob = new Blob([characterJson], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
