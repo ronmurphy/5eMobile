@@ -7,7 +7,7 @@ const skills = [
     'Sleight of Hand', 'Stealth', 'Survival'
 ];
 const spellLevels = ['Cantrips', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
-const APP_VERSION = "2";  // Note: It's a string to match the JSON format
+const APP_VERSION = "3";  // Note: It's a string to match the JSON format
 
 let races = {};
 let classes = [];
@@ -378,10 +378,16 @@ function getHitDiceByClass(characterClass) {
 }
 
 function updateAbilityScores() {
+    const race = raceSelect ? raceSelect.value : '';
+    const raceTraits = races[race]?.traits;
+
     for (const [ability, score] of Object.entries(character.abilityScores)) {
+        const racialIncrease = raceTraits?.abilityScoreIncrease?.[ability.toLowerCase()] || 0;
+        const finalScore = score + racialIncrease;
         const abilityElement = document.querySelector(`[data-ability="${ability}"]`);
         if (abilityElement) {
-            abilityElement.textContent = `${ability.charAt(0).toUpperCase() + ability.slice(1)}: ${score}`;
+            abilityElement.textContent = `${ability.charAt(0).toUpperCase() + ability.slice(1)}: ${finalScore}`;
+            abilityElement.dataset.value = finalScore;
         }
     }
 }
@@ -582,24 +588,163 @@ function updateRaceTraits() {
         return;
     }
 
-    raceTraitsList.innerHTML = '';
+    displayRaceTraits(raceTraitsList, raceTraits);
+}
+
+function displayRaceTraits(container, raceTraits) {
+    container.innerHTML = '';
 
     if (raceTraits) {
         for (const [trait, value] of Object.entries(raceTraits)) {
-            if (trait !== 'abilityScoreIncrease') {
-                const li = document.createElement('li');
+            if (trait !== 'abilityScoreIncrease' && trait !== 'languages') {
+                const traitElement = document.createElement('li');
                 const traitName = trait.replace(/([A-Z])/g, ' $1').trim();
-                li.innerHTML = `<strong>${traitName}:</strong> ${value}`;
-                raceTraitsList.appendChild(li);
-                character.notes += `${traitName}: ${value}\n`;
+                traitElement.innerHTML = `<strong>${traitName}:</strong> ${stringifyTraitValue(value)}`;
+                container.appendChild(traitElement);
             }
+        }
+
+        // Handle ability score increase separately
+        if (raceTraits.abilityScoreIncrease) {
+            const asiElement = document.createElement('li');
+            asiElement.innerHTML = '<strong>Ability Score Increase:</strong> ' + 
+                Object.entries(raceTraits.abilityScoreIncrease)
+                    .map(([ability, increase]) => `${ability.charAt(0).toUpperCase() + ability.slice(1)} +${increase}`)
+                    .join(', ');
+            container.appendChild(asiElement);
         }
     }
 
-    if (raceTraitsList.children.length === 0) {
+    if (container.children.length === 0) {
+        const noTraitsElement = document.createElement('li');
+        noTraitsElement.textContent = 'No race traits available for this race.';
+        container.appendChild(noTraitsElement);
+    }
+}
+
+// function stringifyTraitValue(value) {
+//     if (typeof value === 'object' && value !== null) {
+//         if (Array.isArray(value)) {
+//             return value.map(stringifyTraitValue).join(', ');
+//         } else {
+//             return Object.entries(value).map(([key, val]) => {
+//                 const formattedKey = key.replace(/([A-Z])/g, ' $1').trim();
+//                 return `${formattedKey}: ${stringifyTraitValue(val)}`;
+//             }).join(', ');
+//         }
+//     }
+//     return value.toString();
+// }
+
+function updateFeaturesList() {
+    const featuresList = document.getElementById('featuresList');
+    if (!featuresList) {
+        console.warn('Features list element not found');
+        return;
+    }
+
+    featuresList.innerHTML = '';
+
+    // Add racial traits
+    const raceTraits = races[character.race]?.traits || {};
+    if (Object.keys(raceTraits).length > 0) {
+        const racialTraitsHeader = document.createElement('li');
+        racialTraitsHeader.innerHTML = `<strong>${character.race} Traits:</strong>`;
+        featuresList.appendChild(racialTraitsHeader);
+
+        for (const [trait, value] of Object.entries(raceTraits)) {
+            if (trait !== 'abilityScoreIncrease' && trait !== 'languages') {
+                const li = document.createElement('li');
+                const traitName = trait.replace(/([A-Z])/g, ' $1').trim();
+                li.innerHTML = `<strong>${traitName}:</strong> ${stringifyTraitValue(value)}`;
+                featuresList.appendChild(li);
+            }
+        }
+
+        // Handle ability score increase separately
+        if (raceTraits.abilityScoreIncrease) {
+            const asiLi = document.createElement('li');
+            asiLi.innerHTML = '<strong>Ability Score Increase:</strong> ' + 
+                Object.entries(raceTraits.abilityScoreIncrease)
+                    .map(([ability, increase]) => `${ability.charAt(0).toUpperCase() + ability.slice(1)} +${increase}`)
+                    .join(', ');
+            featuresList.appendChild(asiLi);
+        }
+    }
+
+    // Add class features
+    const classFeatures = classes.find(c => c.name === character.class)?.classFeatures || [];
+    if (classFeatures.length > 0) {
+        const classFeaturesHeader = document.createElement('li');
+        classFeaturesHeader.innerHTML = `<strong>${character.class} Features:</strong>`;
+        featuresList.appendChild(classFeaturesHeader);
+
+        classFeatures.forEach(feature => {
+            const [featureName, , , featureLevel] = feature.split('|');
+            if (parseInt(featureLevel) <= character.level) {
+                const li = document.createElement('li');
+                li.textContent = featureName;
+                featuresList.appendChild(li);
+            }
+        });
+    }
+
+    // Add other features (if any)
+    if (character.features && character.features.length > 0) {
+        const otherFeaturesHeader = document.createElement('li');
+        otherFeaturesHeader.innerHTML = '<strong>Other Features:</strong>';
+        featuresList.appendChild(otherFeaturesHeader);
+
+        character.features.forEach(feature => {
+            const li = document.createElement('li');
+            li.textContent = feature;
+            featuresList.appendChild(li);
+        });
+    }
+
+    if (featuresList.children.length === 0) {
         const li = document.createElement('li');
-        li.textContent = 'No race traits available for this race.';
-        raceTraitsList.appendChild(li);
+        li.textContent = 'No features available.';
+        featuresList.appendChild(li);
+    }
+}
+
+function stringifyTraitValue(value) {
+    if (typeof value === 'object' && value !== null) {
+        if (Array.isArray(value)) {
+            return value.map(stringifyTraitValue).join(', ');
+        } else {
+            return Object.entries(value).map(([key, val]) => {
+                const formattedKey = key.replace(/([A-Z])/g, ' $1').trim();
+                return `${formattedKey}: ${stringifyTraitValue(val)}`;
+            }).join(', ');
+        }
+    }
+    return value.toString();
+}
+
+function updateLanguages() {
+    const race = raceSelect ? raceSelect.value : '';
+    const raceLanguages = races[race]?.traits?.languages || [];
+    const languagesList = document.getElementById('languagesList');
+
+    if (!languagesList) {
+        console.warn('Languages list element not found');
+        return;
+    }
+
+    languagesList.innerHTML = '';
+
+    raceLanguages.forEach(language => {
+        const li = document.createElement('li');
+        li.textContent = language;
+        languagesList.appendChild(li);
+    });
+
+    if (languagesList.children.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'No languages available for this race.';
+        languagesList.appendChild(li);
     }
 }
 
@@ -1038,14 +1183,40 @@ function updateCharacterSheet() {
             updateSheetSkills();
         }
         
+        updateFeaturesList();
+
         // Combat stats
         const hpElement = document.getElementById('sheetHP');
         if (hpElement) hpElement.textContent = `${character.hp || 0}/${character.maxHp || 0}`;
         
-        // const acElement = document.getElementById('sheetAC');
-        // if (acElement) acElement.textContent = character.ac || 10;
-        // updateACDisplay();
-        
+
+
+// Update languages
+const languagesList = document.getElementById('sheetLanguages');
+if (languagesList) {
+    languagesList.innerHTML = character.languages.join(', ') || 'None';
+}
+updateFeaturesList();
+// Update racial traits
+// const racialTraitsList = document.getElementById('sheetRacialTraits');
+// if (racialTraitsList) {
+//     racialTraitsList.innerHTML = '';
+//     const raceTraits = races[character.race]?.traits || {};
+//     for (const [trait, value] of Object.entries(raceTraits)) {
+//         if (trait !== 'abilityScoreIncrease' && trait !== 'languages') {
+//             const li = document.createElement('li');
+//             const traitName = trait.replace(/([A-Z])/g, ' $1').trim();
+//             li.innerHTML = `<strong>${traitName}:</strong> ${value}`;
+//             racialTraitsList.appendChild(li);
+//         }
+//     }
+// }
+    
+const racialTraitsList = document.getElementById('sheetRacialTraits');
+if (racialTraitsList) {
+    const raceTraits = races[character.race]?.traits || {};
+    displayRaceTraits(racialTraitsList, raceTraits);
+}
 
         document.addEventListener('DOMContentLoaded', () => {
             const acElement = document.getElementById('sheetAC');
@@ -2063,33 +2234,83 @@ function initializeCharacterSheet() {
 }
 
 function calculateCharacterStats() {
+    const raceTraits = races[character.race]?.traits || {};
+    const classInfo = classes.find(c => c.name === character.class) || {};
+
+    // Calculate ability scores and modifiers
+    for (const ability in character.abilityScores) {
+        const score = character.abilityScores[ability];
+        const racialBonus = raceTraits.abilityScoreIncrease?.[ability] || 0;
+        const totalScore = score + racialBonus;
+        character.abilityScores[ability] = totalScore;
+        character[`${ability}Modifier`] = Math.floor((totalScore - 10) / 2);
+    }
+
     // Calculate HP
-    const conModifier = Math.floor((character.abilityScores.constitution - 10) / 2);
+    const conModifier = character.constitutionModifier;
     const hitDice = getHitDiceByClass(character.class);
     character.maxHp = hitDice + conModifier + ((character.level - 1) * (Math.floor(hitDice / 2) + 1 + conModifier));
     if (!character.hp) {
         character.hp = character.maxHp;
     }
 
-    // Calculate AC
-    const dexModifier = Math.floor((character.abilityScores.dexterity - 10) / 2);
-    character.ac = 10 + dexModifier;
+    // Calculate AC (base, will need to be adjusted for armor and shields)
+    character.ac = 10 + character.dexterityModifier;
 
     // Calculate Initiative
-    character.initiative = dexModifier;
+    character.initiative = character.dexterityModifier;
 
     // Set proficiency bonus based on level
     character.proficiencyBonus = Math.ceil(1 + (character.level / 4));
 
-    // Set speed (default to 30, but should be adjusted based on race)
-    const raceTraits = races[character.race]?.traits || {};
+    // Set speed (default to 30, but adjusted based on race)
     character.speed = raceTraits.speed || 30;
 
     // Set hit dice
-    character.hitDie.faces = getHitDiceByClass(character.class);
+    character.hitDie = {
+        number: character.level,
+        faces: getHitDiceByClass(character.class)
+    };
     character.currentHitDice = character.level;
     character.maxHitDice = character.level;
-    character.notes = '';
+
+    // Calculate saving throws
+    for (const ability in character.savingThrows) {
+        const isProficient = classInfo.proficiency?.includes(ability) || false;
+        character.savingThrows[ability] = {
+            proficient: isProficient,
+            value: character[`${ability}Modifier`] + (isProficient ? character.proficiencyBonus : 0)
+        };
+    }
+
+    // Calculate skill bonuses
+    for (const skill in character.skills) {
+        const ability = skillAbilityMap[skill] || 'intelligence';
+        const isProficient = character.skills[skill].proficient;
+        const isExpert = character.skills[skill].expertise;
+        let bonus = character[`${ability}Modifier`];
+        if (isProficient) bonus += character.proficiencyBonus;
+        if (isExpert) bonus += character.proficiencyBonus;
+        character.skills[skill].bonus = bonus;
+    }
+
+    // Set languages
+    character.languages = [...new Set([...(raceTraits.languages || []), ...(character.languages || [])])];
+
+    // Set spellcasting ability and calculate spell save DC and attack bonus
+    if (classInfo.spellcastingAbility) {
+        character.spellcasting.ability = classInfo.spellcastingAbility;
+        const spellAbilityModifier = character[`${classInfo.spellcastingAbility}Modifier`];
+        character.spellcasting.spellSaveDC = 8 + character.proficiencyBonus + spellAbilityModifier;
+        character.spellcasting.spellAttackBonus = character.proficiencyBonus + spellAbilityModifier;
+    }
+
+    // Initialize or reset notes if not present
+    if (!character.notes) {
+        character.notes = '';
+    }
+
+    console.log('Character stats calculated:', character);
 }
 
 function generateRandomCharacter() {
@@ -2100,10 +2321,18 @@ function generateRandomCharacter() {
     // Generate random race
     const raceNames = Object.keys(races);
     const randomRace = getRandomItem(raceNames);
-    console.log('Selected random race:', randomRace);
-    if (raceSelect) raceSelect.value = randomRace;
-    const raceTraits = races[randomRace]?.traits || {};
     character.race = randomRace;
+    const raceTraits = races[randomRace]?.traits || {};
+
+    // Apply racial ability score increases
+    if (raceTraits.abilityScoreIncrease) {
+        for (const [ability, increase] of Object.entries(raceTraits.abilityScoreIncrease)) {
+            character.abilityScores[ability] += increase;
+        }
+    }
+
+    // Add racial languages
+    character.languages = raceTraits.languages || [];
 
     // Generate random class
     const randomClass = getRandomItem(classes);
@@ -2208,15 +2437,60 @@ function generateRandomCharacter() {
 // }
 
 function saveCharacterToJson() {
-    const characterData = { ...character };
-    characterData.spellcasting.spells = character.spellcasting.spells.map(spell => spell.name);
-    
-    const versionedData = {
+    const characterData = {
         version: APP_VERSION,
-        ...characterData
+        name: character.name,
+        race: character.race,
+        class: character.class,
+        subclass: character.subclass,
+        level: character.level,
+        background: character.background,
+        alignment: character.alignment,
+        experiencePoints: character.experiencePoints,
+        abilityScores: { ...character.abilityScores },
+        skills: { ...character.skills },
+        proficiencyBonus: character.proficiencyBonus,
+        hp: character.hp,
+        maxHp: character.maxHp,
+        ac: character.ac,
+        initiative: character.initiative,
+        speed: character.speed,
+        hitDie: character.hitDie,
+        maxHitDice: character.maxHitDice,
+        currentHitDice: character.currentHitDice,
+        savingThrows: { ...character.savingThrows },
+        languages: [...character.languages],
+        features: [...(character.features || [])],
+        traits: {
+            personalityTraits: character.personalityTraits,
+            ideals: character.ideals,
+            bonds: character.bonds,
+            flaws: character.flaws
+        },
+        inventory: character.inventory.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            weight: item.weight,
+            description: item.description
+        })),
+        spellcasting: {
+            class: character.spellcasting.class,
+            ability: character.spellcasting.ability,
+            spellSaveDC: character.spellcasting.spellSaveDC,
+            spellAttackBonus: character.spellcasting.spellAttackBonus,
+            spells: character.spellcasting.spells.map(spell => 
+                typeof spell === 'string' ? spell : spell.name
+            ),
+            spellSlots: { ...character.spellcasting.spellSlots },
+            currentSpellSlots: { ...character.spellcasting.currentSpellSlots }
+        },
+        currency: { ...character.currency },
+        notes: character.notes,
+        feats: [...(character.feats || [])],
+        abilityScoreImprovementsLeft: character.abilityScoreImprovementsLeft || 0
     };
 
-    const characterJson = JSON.stringify(versionedData, null, 2);
+    const characterJson = JSON.stringify(characterData, null, 2);
     const blob = new Blob([characterJson], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2227,39 +2501,17 @@ function saveCharacterToJson() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+function calculateProficiencyBonus(level) {
+    return Math.floor((level - 1) / 4) + 2;
+}
 
-// function loadCharacterFromJson() {
-//     const input = document.createElement('input');
-//     input.type = 'file';
-//     input.accept = '.json';
-//     input.onchange = (event) => {
-//         const file = event.target.files[0];
-//         const reader = new FileReader();
-//         reader.onload = (e) => {
-//             try {
-//                 const loadedCharacter = JSON.parse(e.target.result);
-//                 Object.assign(character, loadedCharacter);
-                
-//                 // Process spellcasting data
-//                 if (character.spellcasting && character.spellcasting.spells) {
-//                     character.spellcasting.spells = character.spellcasting.spells.map(spellName => 
-//                         spells.find(spell => spell.name === spellName)
-//                     ).filter(spell => spell !== undefined);
-//                 }
-                
-//                 updateCharacterSheet();
-//                 showCharacterSheet();
-//                 hideDndBeyondImportCard(); // Add this line to hide the import card
-//                 console.log('Character loaded successfully');
-//             } catch (error) {
-//                 console.error('Error loading character:', error);
-//                 alert('Error loading character. Please check the file format.');
-//             }
-//         };
-//         reader.readAsText(file);
-//     };
-//     input.click();
-// }
+function updateProficiencyBonus() {
+    character.proficiencyBonus = calculateProficiencyBonus(character.level);
+    const profBonusElement = document.getElementById('proficiencyBonus');
+    if (profBonusElement) {
+        profBonusElement.textContent = `+${character.proficiencyBonus}`;
+    }
+}
 
 function loadCharacterFromJson() {
     const input = document.createElement('input');
@@ -2271,28 +2523,51 @@ function loadCharacterFromJson() {
         reader.onload = (e) => {
             try {
                 const loadedData = JSON.parse(e.target.result);
-                
+               
                 if (loadedData.version) {
                     console.log(`Loading character file version: ${loadedData.version}`);
-                    // Remove the version property before assigning to character
                     const { version, ...characterData } = loadedData;
-                    Object.assign(character, characterData);
+                    
+                    // Ensure all expected properties are present
+                    const defaultCharacter = {
+                        name: '', race: '', class: '', subclass: '', level: 1,
+                        background: '', alignment: '', experiencePoints: 0,
+                        abilityScores: {}, skills: {}, proficiencyBonus: 2,
+                        hp: 0, maxHp: 0, ac: 10, initiative: 0, speed: 30,
+                        hitDie: {}, maxHitDice: 1, currentHitDice: 1,
+                        savingThrows: {}, languages: [], features: [],
+                        traits: {}, inventory: [], spellcasting: {},
+                        currency: {}, notes: '', feats: [],
+                        abilityScoreImprovementsLeft: 0
+                    };
+                    
+                    Object.assign(character, defaultCharacter, characterData);
                 } else {
                     console.log('Loading legacy character file');
                     Object.assign(character, loadedData);
                 }
-                
+               
                 // Process spellcasting data
                 if (character.spellcasting && character.spellcasting.spells) {
-                    character.spellcasting.spells = character.spellcasting.spells.map(spellName => 
-                        spells.find(spell => spell.name === spellName)
+                    character.spellcasting.spells = character.spellcasting.spells.map(spellName =>
+                        typeof spellName === 'string' 
+                            ? spells.find(spell => spell.name === spellName) 
+                            : spellName
                     ).filter(spell => spell !== undefined);
                 }
+               
+                // Ensure arrays are properly initialized
+                character.languages = character.languages || [];
+                character.features = character.features || [];
+                character.feats = character.feats || [];
+                
+                // Recalculate derived stats
+                calculateCharacterStats();
                 
                 updateCharacterSheet();
                 showCharacterSheet();
                 hideDndBeyondImportCard();
-                console.log('Character loaded successfully');
+                console.log('Character loaded successfully:', character);
             } catch (error) {
                 console.error('Error loading character:', error);
                 alert('Error loading character. Please check the file format.');
@@ -2518,7 +2793,8 @@ function init() {
 
 // Data loading
 Promise.all([
-    fetch('races.json').then(response => response.json()),
+    // fetch('races.json').then(response => response.json()),
+    fetch('races2.json').then(response => response.json()),
     fetch('classes.json').then(response => response.json()),
     fetch('spells.json').then(response => response.json()),
     fetch('weapons.json').then(response => response.json()),
